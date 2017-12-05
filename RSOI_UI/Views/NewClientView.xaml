@@ -1,0 +1,134 @@
+﻿<Window x:Class="RSOI_UI.Views.NewClientView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:RSOI_UI.Views"
+              ResizeMode="NoResize" Width="580" >
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+        <StackPanel Grid.Column="0" Orientation="Vertical">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
+                <GroupBox Header="Паспортные данные" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="5">
+                            <TextBlock Text="ID" HorizontalAlignment="Right"  VerticalAlignment="Top" Width="120" />
+                            <TextBox Text="{Binding PassportId}" HorizontalAlignment="Left" VerticalAlignment="Top" Width="120"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="5">
+                            <TextBlock Text="Серийный номер" HorizontalAlignment="Right"  VerticalAlignment="Top" Width="120" />
+                            <TextBox Text="{Binding PassportNumber}" HorizontalAlignment="Left" VerticalAlignment="Top" Width="120"/>
+                        </StackPanel>
+                        <Separator />
+                        <StackPanel Orientation="Horizontal" Margin="5">
+                            <TextBlock Text="Имя" HorizontalAlignment="Right"  VerticalAlignment="Top" Width="120" />
+                            <TextBox Text="{Binding Name}" HorizontalAlignment="Left" VerticalAlignment="Top" Width="120"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="5">
+                            <TextBlock Text="Фамилия" HorizontalAlignment="Right"  VerticalAlignment="Top" Width="120" />
+                            <TextBox Text="{Binding LastName}" HorizontalAlignment="Left" VerticalAlignment="Top" Width="120"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="5">
+                            <TextBlock Text="Отчество" HorizontalAlignment="Right" VerticalAlignment="Top" Width="120" />
+                            <TextBox Text="{Binding MiddleName}" HorizontalAlignment="Left" VerticalAlignment="Top" Width="120"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="5">
+                            <TextBlock Text="Пол" HorizontalAlignment="Right" VerticalAlignment="Top" Width="120" />
+                            <RadioButton GroupName="Sex" Content="М"  Margin="0,0,20,0" />
+                            <RadioButton GroupName="Sex" Content="Ж"/>
+                        </StackPanel>
+                        <Separator />
+                        <StackPanel Orientation="Horizontal" Margin="5">
+                            <TextBlock Text="Дата Выдачи" HorizontalAlignment="Right" VerticalAlignment="Top" Width="120" />
+                            <DatePicker SelectedDate="{Binding IssueDate}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="5">
+                            <TextBlock Text="Кем Выдан" HorizontalAlignment="Right" VerticalAlignment="Top" Width="120" />
+                            <TextBox Text="{Binding IssuedBy}" HorizontalAlignment="Left" VerticalAlignment="Top" Width="120"/>
+                        </StackPanel>
+                        <Separator />
+                        <StackPanel Orientation="Horizontal" Margin="5">
+                            <TextBlock Text="Дата Рождения" HorizontalAlignment="Right" VerticalAlignment="Top" Width="120" />
+                            <DatePicker SelectedDate="{Binding Birthday}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="5">
+                            <TextBlock Text="Адрес Рождения" HorizontalAlignment="Right" VerticalAlignment="Top" Width="120" />
+                            <TextBox Text="{Binding BirthdayAddress}" HorizontalAlignment="Left" VerticalAlignment="Top" Width="120"/>
+                        </StackPanel>
+                        <Separator />
+                        <StackPanel Orientation="Horizontal" Margin="5">
+                            <TextBlock Text="Город Прописки" HorizontalAlignment="Right" VerticalAlignment="Top" Width="120" />
+                            <ComboBox ItemsSource="{Binding Cities}" SelectedItem="{Binding RegCity}" Width="120" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="5">
+                            <TextBlock Text="Адрес прописки" HorizontalAlignment="Right"  VerticalAlignment="Top" Width="120" />
+                            <TextBox Text="{Binding RegAddr}" HorizontalAlignment="Left" VerticalAlignment="Top" Width="120"/>
+                        </StackPanel>
+                        <Separator />
+                        <StackPanel Orientation="Horizontal" Margin="5">
+                            <TextBlock Text="Национальность" HorizontalAlignment="Right" VerticalAlignment="Top" Width="120" />
+                            <ComboBox ItemsSource="{Binding Nationalities}" SelectedItem="{Binding Nationality}" Width="120" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="5">
+                            <TextBlock Text="Семейный Статус" HorizontalAlignment="Right" VerticalAlignment="Top" Width="120" />
+                            <ComboBox ItemsSource="{Binding FamilyStatuses}" SelectedItem="{Binding FamilyStatus}" Width="120" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                        </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+
+                <StackPanel>
+                    <GroupBox Header="Доп. Данные" HorizontalAlignment="Left" Margin="10,10,0,30" >
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="5">
+                                <TextBlock Text="Дом. Телефон" HorizontalAlignment="Right"  VerticalAlignment="Top" Width="120" />
+                                <TextBox Text="{Binding HomePhone}" HorizontalAlignment="Left" VerticalAlignment="Top" Width="120"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="5">
+                                <TextBlock Text="Моб. Телефон" HorizontalAlignment="Right"  VerticalAlignment="Top" Width="120" />
+                                <TextBox Text="{Binding MobilePhone}" HorizontalAlignment="Left" VerticalAlignment="Top" Width="120"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="5">
+                                <TextBlock Text="E-Mail" HorizontalAlignment="Right"  VerticalAlignment="Top" Width="120" />
+                                <TextBox Text="{Binding Email}" HorizontalAlignment="Left" VerticalAlignment="Top" Width="120"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="5">
+                                <TextBlock Text="Место Работы" HorizontalAlignment="Right"  VerticalAlignment="Top" Width="120" />
+                                <TextBox Text="{Binding WorkPlace}" HorizontalAlignment="Left" VerticalAlignment="Top" Width="120"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="5">
+                                <TextBlock Text="Должность" HorizontalAlignment="Right"  VerticalAlignment="Top" Width="120" />
+                                <TextBox Text="{Binding WorkPosition}" HorizontalAlignment="Left" VerticalAlignment="Top" Width="120"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="5">
+                                <TextBlock Text="Месячный Доход" HorizontalAlignment="Right"  VerticalAlignment="Top" Width="120" />
+                                <TextBox Text="{Binding MonthIncome}" HorizontalAlignment="Left" VerticalAlignment="Top" Width="120"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="5">
+                                <TextBlock Text="Военнообязанный" HorizontalAlignment="Right"  VerticalAlignment="Top" Width="120" />
+                                <CheckBox IsChecked="{Binding Reservist}" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="5">
+                                <TextBlock Text="Инвалидность" HorizontalAlignment="Right"  VerticalAlignment="Top" Width="120" />
+                                <ComboBox ItemsSource="{Binding Disabilities}" SelectedItem="{Binding Disability}" Width="120" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="5">
+                                <TextBlock Text="Город Проживания" HorizontalAlignment="Right"  VerticalAlignment="Top" Width="120" />
+                                <ComboBox ItemsSource="{Binding Cities}" SelectedItem="{Binding City}" Width="120" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="5">
+                                <TextBlock Text="Адрес Проживания" HorizontalAlignment="Right"  VerticalAlignment="Top" Width="120" />
+                                <TextBox Text="{Binding Address}" HorizontalAlignment="Left" VerticalAlignment="Top" Width="120"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </GroupBox>
+                    <Button Height="50" Width="120" Command="{Binding AddNewClientCommand}" Content="Добавить"/>
+                </StackPanel>
+            </StackPanel>
+            <StackPanel>
+                <GroupBox Header="Отчёт:" Content="{Binding Report}" />
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</Window>
