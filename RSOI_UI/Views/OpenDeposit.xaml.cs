@@ -18,9 +18,9 @@ namespace RSOI_UI.Views
     /// <summary>
     /// Interaction logic for NewDeposit.xaml
     /// </summary>
-    public partial class NewDeposit : UserControl
+    public partial class OpenDeposit
     {
-        public NewDeposit()
+        public OpenDeposit()
         {
             InitializeComponent();
         }

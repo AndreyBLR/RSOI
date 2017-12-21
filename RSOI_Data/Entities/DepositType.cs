@@ -11,8 +11,10 @@ namespace RSOI_Data.Entities
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public float Rate { get; set; }
+        public double Rate { get; set; }
         public int TermInMonth { get; set; }
+        public CurrencyType CurrencyType { get; set; }
+        public bool WithWithdraw { get; set; }
 
         public static DepositType GetDepositTypeById(int id)
         {
@@ -32,8 +34,10 @@ namespace RSOI_Data.Entities
                     {
                         Id = (int)reader["Id"],
                         Name = (string)reader["Name"],
-                        Rate = (float) reader["Rate"],
-                        TermInMonth = (int)reader["TermInMonth"]
+                        Rate = (double) reader["Rate"],
+                        TermInMonth = (int)reader["TermInMonth"],
+                        WithWithdraw = (bool)reader["WithWithdraw"],
+                        CurrencyType = CurrencyType.GetCurrencyTypeById((int)reader["CurrencyTypeId"])
                     };
                 }
 
@@ -63,7 +67,11 @@ namespace RSOI_Data.Entities
                     depositTypes.Add(new DepositType()
                     {
                         Id = (int)reader["Id"],
-                        Name = (string)reader["Name"]
+                        Name = (string)reader["Name"],
+                        TermInMonth = (int) reader["TermInMonth"],
+                        Rate = (double)reader["Rate"],
+                        WithWithdraw = (bool)reader["WithWithdraw"],
+                        CurrencyType = CurrencyType.GetCurrencyTypeById((int)reader["CurrencyTypeId"])
                     });
                 }
 
@@ -76,7 +84,7 @@ namespace RSOI_Data.Entities
 
         public override string ToString()
         {
-            return Name;
+            return $" {Name} ({CurrencyType} {TermInMonth}M {Rate}%)";
         }
     }
 }

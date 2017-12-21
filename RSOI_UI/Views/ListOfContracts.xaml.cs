@@ -10,6 +10,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 namespace RSOI_UI.Views
@@ -17,9 +18,9 @@ namespace RSOI_UI.Views
     /// <summary>
     /// Interaction logic for DepositView.xaml
     /// </summary>
-    public partial class DepositView : Window
+    public partial class ListOfContracts : Window
     {
-        public DepositView()
+        public ListOfContracts()
         {
             InitializeComponent();
         }

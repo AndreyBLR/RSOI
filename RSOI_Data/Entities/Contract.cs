@@ -10,14 +10,51 @@ namespace RSOI_Data.Entities
     public class Contract : ActiveRecord
     {
         public string Number { get; set; }
-        public ContractType ContractType { get; set; }
         public Client Client { get; set; }
+        public ContractType ContractType { get; set; }
+        public bool IsClosed { get; set; }
+        public bool EarlyClosing { get; set; }
 
-        public static IList<Contract> GetListOfContractsByClient(int clietnId)
+        public static Contract GetContractByNumber(string numberId)
+        {
+            string queryString = "SELECT * FROM Contracts WHERE Number = '" + numberId + "' ";
+
+            using (OdbcConnection connection = new OdbcConnection(ConnectionString))
+            {
+                OdbcCommand command = new OdbcCommand(queryString, connection);
+
+                connection.Open();
+
+                // Execute the DataReader and access the data.
+                OdbcDataReader reader = command.ExecuteReader();
+
+                if (reader.HasRows)
+                {
+                    reader.Read();
+
+                    return new Contract()
+                    {
+                        Number = (string) reader["Number"],
+                        ContractType = ContractType.GetContractTypeById((int) reader["ContractTypeId"]),
+                        Client = Client.GetClientById((string) reader["ClientId"]),
+                        IsClosed = (bool) reader["IsClosed"],
+                        EarlyClosing = (bool)reader["EarlyClosing"]
+                    };
+
+                }
+
+                // Call Close when done reading.
+                reader.Close();
+            }
+
+            return null;
+        }
+
+        public static IList<Contract> GetListOfContractsByClient(string passportId)
         {
             var contracts = new List<Contract>();
 
-            string queryString = "SELECT * FROM Contracts WHERE ClientId = '" + clietnId + "' ";
+            string queryString = "SELECT * FROM Contracts WHERE ClientId = '" + passportId + "' ";
 
             using (OdbcConnection connection = new OdbcConnection(ConnectionString))
             {
@@ -36,7 +73,9 @@ namespace RSOI_Data.Entities
                         {
                             Number = (string) reader["Number"],
                             ContractType = ContractType.GetContractTypeById((int) reader["ContractTypeId"]),
-                            Client = Client.GetClientById((int) reader["ClientId"])
+                            Client = Client.GetClientById((string) reader["ClientId"]),
+                            IsClosed = (bool)reader["IsClosed"],
+                            EarlyClosing = (bool)reader["EarlyClosing"]
                         });
                     }
                 }
@@ -48,19 +87,22 @@ namespace RSOI_Data.Entities
             return contracts;
         }
 
-        public bool Save()
+        public bool Insert()
         {
             string queryString = "INSERT INTO Contracts " + "(" +
                                  "Number, " +
                                  "ContractTypeId, " +
+                                 "IsClosed, " +
+                                 "EarlyClosing, " +
                                  "ClientId)" +
                                  "VALUES ('" +
                                  Number + "','" +
                                  ContractType.Id + "','" +
+                                 IsClosed + "','" +
+                                 EarlyClosing + "','" +
                                  Client.Passport.PassportId + "')";
 
-            try
-            {
+           
                 using (OdbcConnection connection = new OdbcConnection(ConnectionString))
                 {
                     connection.Open();
@@ -70,11 +112,25 @@ namespace RSOI_Data.Entities
                     command.ExecuteNonQuery();
                 }
                 return true;
-            }
-            catch (Exception ex)
+           
+        }
+
+        public bool Update()
+        {
+            string queryString = "UPDATE Contracts SET IsClosed = '" + IsClosed + "' WHERE Number = '" + Number + "'";
+
+
+            using (OdbcConnection connection = new OdbcConnection(ConnectionString))
             {
-                return false;
+                connection.Open();
+
+                var command = new OdbcCommand(queryString, connection);
+
+                command.ExecuteNonQuery();
             }
+
+            return true;
+
         }
     }
 }

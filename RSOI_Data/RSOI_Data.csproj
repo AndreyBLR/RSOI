@@ -40,7 +40,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataBaseWrapper.cs" />
     <Compile Include="Entities\Account.cs" />
     <Compile Include="Entities\AccountType.cs" />
     <Compile Include="Entities\City.cs" />
@@ -49,14 +48,18 @@
     <Compile Include="Entities\ContractType.cs" />
     <Compile Include="Entities\CurrencyType.cs" />
     <Compile Include="Entities\Deposit.cs" />
+    <Compile Include="DepositManager.cs" />
     <Compile Include="Entities\DepositType.cs" />
     <Compile Include="Entities\Disability.cs" />
     <Compile Include="Entities\ActiveRecord.cs" />
     <Compile Include="Entities\FamilyStatus.cs" />
     <Compile Include="Entities\Nationality.cs" />
-    <Compile Include="Entities\Operation.cs" />
-    <Compile Include="Entities\OperationType.cs" />
+    <Compile Include="Entities\PayerInfo.cs" />
+    <Compile Include="Entities\Transaction.cs" />
+    <Compile Include="Entities\TransactionType.cs" />
     <Compile Include="Entities\Passport.cs" />
+    <Compile Include="Enums\BankAccountIds.cs" />
+    <Compile Include="Enums\ContractTypeIds.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -27,7 +27,7 @@ namespace RSOI_Data.Entities
             Passport = new Passport();
         }
 
-        public static Client GetClientById(int passportId)
+        public static Client GetClientById(string passportId)
         {
             string queryString = "SELECT * FROM Clients WHERE PassportId = '" + passportId + "' ";
 
@@ -45,17 +45,17 @@ namespace RSOI_Data.Entities
 
                     return new Client()
                     {
-                        Passport = Passport.GetPassportById((string)reader["PassportId"]),
-                        City = City.GetCityById((int)reader["CityId"]),
-                        Address = (string)reader["Address"],
-                        HomePhone = (string)reader["HomePhone"],
-                        MobilePhone = (string)reader["MobilePhone"],
-                        Email = (string)reader["Email"],
-                        WorkPlace = (string)reader["WorkPlace"],
-                        WorkPosition = (string)reader["WorkPosition"],
-                        MonthIncome = (long)reader["MonthIncome"],
-                        Reservist = (bool)reader["Reservist"],
-                        Disability = Disability.GetDisabilityById((int)reader["DisabilityId"])
+                        Passport = Passport.GetPassportById((string) reader["PassportId"]),
+                        City = City.GetCityById((int) reader["CityId"]),
+                        Address = (string) reader["Address"],
+                        HomePhone = (string) reader["HomePhone"],
+                        MobilePhone = (string) reader["MobilePhone"],
+                        Email = (string) reader["Email"],
+                        WorkPlace = (string) reader["WorkPlace"],
+                        WorkPosition = (string) reader["WorkPosition"],
+                        MonthIncome = (long) reader["MonthIncome"],
+                        Reservist = (bool) reader["Reservist"],
+                        Disability = Disability.GetDisabilityById((int) reader["DisabilityId"])
                     };
                 }
 
@@ -71,12 +71,13 @@ namespace RSOI_Data.Entities
 
             string queryString = "SELECT * FROM Clients";
 
+
             using (OdbcConnection connection = new OdbcConnection(ConnectionString))
             {
                 OdbcCommand command = new OdbcCommand(queryString, connection);
 
                 connection.Open();
-                
+
                 OdbcDataReader reader = command.ExecuteReader();
 
                 while (reader.Read())
@@ -96,16 +97,19 @@ namespace RSOI_Data.Entities
                         Disability = Disability.GetDisabilityById((int) reader["DisabilityId"])
                     });
                 }
-                
+
                 reader.Close();
             }
+
 
             return clients;
         }
 
-        public bool Save()
+        public bool Insert()
         {
-            string queryString = "INSERT INTO Clients " + "(" +
+            if (Passport.Insert())
+            {
+                string queryString = "INSERT INTO Clients " + "(" +
                                      "PassportId, " +
                                      "Address, " +
                                      "HomePhone, " +
@@ -117,7 +121,7 @@ namespace RSOI_Data.Entities
                                      "Reservist, " +
                                      "DisabilityId, " +
                                      "CityId)" +
-                                 "VALUES ('" +
+                                     "VALUES ('" +
                                      Passport.PassportId + "','" +
                                      Address + "','" +
                                      HomePhone + "','" +
@@ -130,8 +134,6 @@ namespace RSOI_Data.Entities
                                      Disability.Id + "','" +
                                      City.Id + "')";
 
-            try
-            {
                 if (string.IsNullOrEmpty(Verify()))
                 {
                     using (OdbcConnection connection = new OdbcConnection(ConnectionString))
@@ -147,11 +149,10 @@ namespace RSOI_Data.Entities
                 }
 
                 return false;
+
             }
-            catch (Exception)
-            {
-                return false;
-            }
+
+            return false;
         }
 
         public bool Delete()
@@ -190,8 +191,13 @@ namespace RSOI_Data.Entities
             return report;
         }
 
+        public override string ToString()
+        {
+            return Passport.SerialNumber;
+        }
+
         #region Verification
-        
+
         private string VerifyAddress()
         {
             if (string.IsNullOrEmpty(Address))
@@ -204,7 +210,7 @@ namespace RSOI_Data.Entities
 
         private string VerifyMobilePhone()
         {
-            var regex = new Regex("d{9}", RegexOptions.IgnoreCase);
+            var regex = new Regex("\\d{9}", RegexOptions.IgnoreCase);
 
             if (string.IsNullOrEmpty(MobilePhone))
             {
@@ -216,19 +222,21 @@ namespace RSOI_Data.Entities
                 return "";
             }
 
-            return "Номер мобильного телефона должен содержать 9 цифр (2 цифры - код оператора, 7 цифр - номер телефона).";
+            return
+                "Номер мобильного телефона должен содержать 9 цифр (2 цифры - код оператора, 7 цифр - номер телефона).";
         }
 
         private string VerifyEmail()
         {
-            var regex = new Regex(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$", RegexOptions.IgnoreCase);
+            var regex = new Regex(@"^[a-z0-9][-a-z0-9.!#$%&'*+-=?^_`{|}~\/]+@([-a-z0-9]+\.)+[a-z]{2,5}$",
+                RegexOptions.IgnoreCase);
 
             if (string.IsNullOrEmpty(Email))
             {
                 return "";
             }
 
-            if (regex.IsMatch(HomePhone))
+            if (regex.IsMatch(Email))
             {
                 return "";
             }

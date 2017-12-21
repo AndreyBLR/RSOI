@@ -15,11 +15,11 @@ using System.Windows.Shapes;
 namespace RSOI_UI.Views
 {
     /// <summary>
-    /// Interaction logic for DepositView.xaml
+    /// Interaction logic for WithdrawInterest.xaml
     /// </summary>
-    public partial class DepositView : Window
+    public partial class WithdrawInterest : Window
     {
-        public DepositView()
+        public WithdrawInterest()
         {
             InitializeComponent();
         }

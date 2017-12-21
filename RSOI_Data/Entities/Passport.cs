@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace RSOI_Data.Entities
 {
-    public class Passport:ActiveRecord
+    public class Passport : ActiveRecord
     {
         public string PassportId { get; set; }
         public string SerialNumber { get; set; }
@@ -33,7 +33,7 @@ namespace RSOI_Data.Entities
 
         public static Passport GetPassportById(string id)
         {
-            string queryString = "SELECT * FROM Passports WHERE PassportId = '" + id + "' ";
+            string queryString = "SELECT * FROM Passports WHERE IdNumber = '" + id + "' ";
 
             using (OdbcConnection connection = new OdbcConnection(ConnectionString))
             {
@@ -73,69 +73,42 @@ namespace RSOI_Data.Entities
 
             return null;
         }
-        
-        public bool Save()
+
+        public bool Insert()
         {
             string queryString = "INSERT INTO Passports " + "(" +
-                                     "IdNumber, " +
-                                     "SerialNumber, " +
-                                     "Birthday, " +
-                                     "Sex, " +
-                                     "IssuedBy, " +
-                                     "IssueDate, " +
-                                     "Name, " +
-                                     "LastName, " +
-                                     "MiddleName, " +
-                                     "BirtPlace, " +
-                                     "RegistrationAddress, " +
-                                     "RegistrationCityId, " +
-                                     "FamilyStatusId, " +
-                                     "NationalityId) " +
-                                 "VALUES ('" + 
-                                     PassportId + "','" + 
-                                     SerialNumber + "','" + 
-                                     Birthday + "','" + 
-                                     Sex + "','" + 
-                                     IssuedBy + "','" + 
-                                     IssueDate + "','" + 
-                                     Name + "','" + 
-                                     LastName + "','" + 
-                                     MiddleName + "','" + 
-                                     BirthPlace + "','" + 
-                                     RegAddress + "','" + 
-                                     RegCity.Id + "','" + 
-                                     FamilyStatus.Id + "','" + 
-                                     Nationality.Id + "')";
+                                 "IdNumber, " +
+                                 "SerialNumber, " +
+                                 "Birthday, " +
+                                 "Sex, " +
+                                 "IssuedBy, " +
+                                 "IssueDate, " +
+                                 "Name, " +
+                                 "LastName, " +
+                                 "MiddleName, " +
+                                 "BirthPlace, " +
+                                 "RegistrationAddress, " +
+                                 "RegistrationCityId, " +
+                                 "FamilyStatusId, " +
+                                 "NationalityId) " +
+                                 "VALUES ('" +
+                                 PassportId + "','" +
+                                 SerialNumber + "','" +
+                                 Birthday + "','" +
+                                 Sex + "','" +
+                                 IssuedBy + "','" +
+                                 IssueDate + "','" +
+                                 Name + "','" +
+                                 LastName + "','" +
+                                 MiddleName + "','" +
+                                 BirthPlace + "','" +
+                                 RegAddress + "','" +
+                                 RegCity.Id + "','" +
+                                 FamilyStatus.Id + "','" +
+                                 Nationality.Id + "')";
 
-            try
-            {
-                if (string.IsNullOrEmpty(Verify()))
-                {
-                    using (OdbcConnection connection = new OdbcConnection(ConnectionString))
-                    {
-                        connection.Open();
 
-                        var command = new OdbcCommand(queryString, connection);
-
-                        command.ExecuteNonQuery();
-                    }
-
-                    return true;
-                }
-
-                return false;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
-        
-        public bool Delete()
-        {
-            string queryString = "DELETE FROM Passports WHERE IdNumber = '" + PassportId + "' ";
-
-            try
+            if (string.IsNullOrEmpty(Verify()))
             {
                 using (OdbcConnection connection = new OdbcConnection(ConnectionString))
                 {
@@ -148,11 +121,28 @@ namespace RSOI_Data.Entities
 
                 return true;
             }
-            catch (Exception ex)
+
+            return false;
+
+        }
+
+        public bool Delete()
+        {
+            string queryString = "DELETE FROM Passports WHERE IdNumber = '" + PassportId + "' ";
+
+
+            using (OdbcConnection connection = new OdbcConnection(ConnectionString))
             {
-                return false;
+                connection.Open();
+
+                var command = new OdbcCommand(queryString, connection);
+
+                command.ExecuteNonQuery();
             }
-            
+
+            return true;
+
+
         }
 
         public string Verify()
@@ -172,6 +162,11 @@ namespace RSOI_Data.Entities
             report = AddToReport(report, VerifyRegAddress());
 
             return report;
+        }
+
+        public override string ToString()
+        {
+            return PassportId;
         }
 
         #region Verification
@@ -195,7 +190,7 @@ namespace RSOI_Data.Entities
 
         private string VerifySerialNumber()
         {
-            var regex = new Regex("w{2}\\d{7}", RegexOptions.IgnoreCase);
+            var regex = new Regex("\\w{2}\\d{7}", RegexOptions.IgnoreCase);
 
             if (string.IsNullOrEmpty(SerialNumber))
             {
@@ -289,10 +284,10 @@ namespace RSOI_Data.Entities
 
             return "";
         }
-        
+
         private string AddToReport(string report, string error)
         {
-            if(!string.IsNullOrEmpty(error))
+            if (!string.IsNullOrEmpty(error))
                 return report + error + "\n";
 
             return report;

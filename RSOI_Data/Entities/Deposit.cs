@@ -10,12 +10,15 @@ namespace RSOI_Data.Entities
     public class Deposit : ActiveRecord
     {
         public string Number { get; set; }
-        public DepositType DepositType { get; set; }
         public DateTime OpenDate { get; set; }
         public DateTime CloseDate { get; set; }
-        public int Rate { get; set; }
+        public double Rate { get; set; }
+        public CurrencyType CurrencyType { get; set; }
+        public Account CurrentAccount { get; set; }
+        public Account InterestAccount { get; set; }
+        public double Amount { get; set; }
 
-        public static Deposit GetById(int number)
+        public static Deposit GetById(string number)
         {
             string queryString = "SELECT * FROM Deposits WHERE Number = '" + number + "' ";
 
@@ -35,10 +38,13 @@ namespace RSOI_Data.Entities
                     return new Deposit()
                     {
                         Number = (string)reader["Number"],
-                        DepositType = DepositType.GetDepositTypeById((int)reader["DepositTypeId"]),
                         OpenDate = (DateTime)reader["OpenDate"],
                         CloseDate = (DateTime)reader["CloseDate"],
-                        Rate = (int)reader["Rate"]
+                        Rate = (double)reader["Rate"],
+                        CurrencyType = CurrencyType.GetCurrencyTypeById((int)reader["CurrencyTypeId"]),
+                        CurrentAccount = Account.GetAccountById((int)reader["CurrentAccountId"]),
+                        InterestAccount = Account.GetAccountById((int)reader["InterestAccountId"]),
+                        Amount = Math.Round((double) reader["Amount"], 2)
                     };
                 }
 
@@ -49,44 +55,103 @@ namespace RSOI_Data.Entities
             return null;
         }
 
-        public bool Save()
+        public static IList<Deposit> GetListOfDeposits()
         {
-            string queryString = "INSERT INTO Contracts " + "(" +
-                                     "Number, " +
-                                     "DepositTypeId, " +
-                                     "OpenDate, " +
-                                     "CloseDate, " +
-                                     "Rate)" +
-                                 "VALUES ('" +
-                                     Number + "','" +
-                                     DepositType.Id + "','" +
-                                     OpenDate + "','" +
-                                     CloseDate + "','" +
-                                     Rate + "')";
+            var deposits = new List<Deposit>();
+            string queryString = "SELECT * FROM Deposits";
 
-
-            try
+            using (OdbcConnection connection = new OdbcConnection(ConnectionString))
             {
-                if (string.IsNullOrEmpty(Verify()))
+                OdbcCommand command = new OdbcCommand(queryString, connection);
+
+                connection.Open();
+
+                // Execute the DataReader and access the data.
+                OdbcDataReader reader = command.ExecuteReader();
+
+                while(reader.Read())
                 {
-                    using (OdbcConnection connection = new OdbcConnection(ConnectionString))
+                    deposits.Add(new Deposit()
                     {
-                        connection.Open();
-
-                        var command = new OdbcCommand(queryString, connection);
-
-                        command.ExecuteNonQuery();
-                    }
-                    return true;
+                        Number = (string)reader["Number"],
+                        OpenDate = (DateTime)reader["OpenDate"],
+                        CloseDate = (DateTime)reader["CloseDate"],
+                        Rate = (double)reader["Rate"],
+                        CurrencyType = CurrencyType.GetCurrencyTypeById((int)reader["CurrencyTypeId"]),
+                        CurrentAccount = Account.GetAccountById((int)reader["CurrentAccountId"]),
+                        InterestAccount = Account.GetAccountById((int)reader["InterestAccountId"]),
+                        Amount = (double)reader["Amount"]
+                    });
                 }
 
-                return false;
+                // Call Close when done reading.
+                reader.Close();
             }
-            catch (Exception ex)
-            {
-                return false;
-            }
+
+            return deposits;
         }
+
+        public bool Insert()
+        {
+            string queryString = "INSERT INTO Deposits " + "(" +
+                                 "Number, " +
+                                 "OpenDate, " +
+                                 "CloseDate, " +
+                                 "CurrentAccountId, " +
+                                 "InterestAccountId, " +
+                                 "CurrencyTypeId, " +
+                                 "Amount, " +
+                                 "Rate)" +
+                                 "VALUES ('" +
+                                 Number + "','" +
+                                 OpenDate + "','" +
+                                 CloseDate + "','" +
+                                 CurrentAccount.Id + "','" +
+                                 InterestAccount.Id + "','" +
+                                 CurrencyType.Id + "','" +
+                                 Amount + "','" +
+                                 Rate + "')";
+
+
+            if (string.IsNullOrEmpty(Verify()))
+            {
+                using (OdbcConnection connection = new OdbcConnection(ConnectionString))
+                {
+                    connection.Open();
+
+                    var command = new OdbcCommand(queryString, connection);
+
+                    command.ExecuteNonQuery();
+                }
+                return true;
+            }
+
+            return false;
+
+        }
+
+        public bool Update()
+        {
+            string queryString = "UPDATE Deposits SET Amount = " + Amount + " WHERE Number = '" + Number + "'";
+
+
+            if (string.IsNullOrEmpty(Verify()))
+            {
+                using (OdbcConnection connection = new OdbcConnection(ConnectionString))
+                {
+                    connection.Open();
+
+                    var command = new OdbcCommand(queryString, connection);
+
+                    command.ExecuteNonQuery();
+                }
+                return true;
+            }
+
+            return false;
+
+        }
+
 
         public string Verify()
         {

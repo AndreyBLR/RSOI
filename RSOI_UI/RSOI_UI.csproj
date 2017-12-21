@@ -58,22 +58,38 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Enums\Sex.cs" />
+    <Compile Include="Converters\BoolToContractStatusConverter.cs" />
+    <Compile Include="Converters\BoolToEarlyClosingStatusConverter.cs" />
+    <Compile Include="Converters\TransactionToAccountNameConverter.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="ViewModels\BaseViewModel.cs" />
+    <Compile Include="ViewModels\DepositViewModel.cs" />
+    <Compile Include="ViewModels\ListOfAccountsViewModel.cs" />
+    <Compile Include="ViewModels\ListOfContractsViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
-    <Compile Include="ViewModels\NewClientViewModel.cs" />
-    <Compile Include="Views\ClientListView.xaml.cs">
-      <DependentUpon>ClientListView.xaml</DependentUpon>
-    </Compile>
+    <Compile Include="ViewModels\RegisterNewClientViewModel.cs" />
+    <Compile Include="ViewModels\OpenDepositViewModel.cs" />
+    <Compile Include="ViewModels\TransferMoneyToDepositViewModel.cs" />
     <Compile Include="Views\DepositView.xaml.cs">
       <DependentUpon>DepositView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\NewClientView.xaml.cs">
-      <DependentUpon>NewClientView.xaml</DependentUpon>
+    <Compile Include="Views\ListOfAccounts.xaml.cs">
+      <DependentUpon>ListOfAccounts.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\NewDeposit.xaml.cs">
-      <DependentUpon>NewDeposit.xaml</DependentUpon>
+    <Compile Include="Views\ListOfContracts.xaml.cs">
+      <DependentUpon>ListOfContracts.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\RegisterNewClient.xaml.cs">
+      <DependentUpon>RegisterNewClient.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\OpenDeposit.xaml.cs">
+      <DependentUpon>OpenDeposit.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\TransferMoneyToDeposit.xaml.cs">
+      <DependentUpon>TransferMoneyToDeposit.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\WithdrawInterest.xaml.cs">
+      <DependentUpon>WithdrawInterest.xaml</DependentUpon>
     </Compile>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -87,19 +103,31 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="Views\ClientListView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Views\DepositView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\NewClientView.xaml">
+    <Page Include="Views\ListOfAccounts.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\NewDeposit.xaml">
+    <Page Include="Views\ListOfContracts.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\RegisterNewClient.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\OpenDeposit.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\TransferMoneyToDeposit.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\WithdrawInterest.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

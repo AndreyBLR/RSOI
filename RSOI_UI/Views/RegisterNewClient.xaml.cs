@@ -16,13 +16,16 @@ using System.Windows.Shapes;
 namespace RSOI_UI.Views
 {
     /// <summary>
-    /// Interaction logic for ClientListView.xaml
+    /// Interaction logic for NewClientView.xaml
     /// </summary>
-    public partial class ClientListView : UserControl
+    public partial class RegisterNewClient
     {
-        public ClientListView()
+        public RegisterNewClient()
         {
+            this.SizeToContent = SizeToContent.Width;
+            this.SizeToContent = SizeToContent.Height;
             InitializeComponent();
+            
         }
     }
 }

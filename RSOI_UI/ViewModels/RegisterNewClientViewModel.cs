@@ -6,15 +6,14 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Prism.Commands;
 using RSOI_Data.Entities;
-using RSOI_UI.Enums;
 
 namespace RSOI_UI.ViewModels
 {
-    public class NewClientViewModel:BaseViewModel
+    public class RegisterNewClientViewModel:BaseViewModel
     {
         private Client _newClient;
         
-        public NewClientViewModel()
+        public RegisterNewClientViewModel()
         {
             _newClient = new Client();
         }
@@ -195,7 +194,7 @@ namespace RSOI_UI.ViewModels
 
             if (string.IsNullOrEmpty(Report))
             {
-                //_newClient.Save();
+                _newClient.Insert();
             }
         }
 

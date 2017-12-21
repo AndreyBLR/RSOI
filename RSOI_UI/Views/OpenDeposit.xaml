@@ -1,0 +1,84 @@
+﻿<Window x:Class="RSOI_UI.Views.OpenDeposit"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:RSOI_UI.Views"
+             xmlns:converters="clr-namespace:RSOI_UI.Converters"
+             mc:Ignorable="d" ResizeMode="NoResize" Width="600" Height="300" Background="WhiteSmoke" Title="Открыть депозит">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary>
+                    <converters:BoolToEarlyClosingStatusConverter x:Key="boolToEarlyClosingStatusConverter" />
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+        
+        <GroupBox Grid.Column="0" Header="Клиент" >
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="5">
+                    <TextBlock Text="ID: " HorizontalAlignment="Right"  VerticalAlignment="Center" FontWeight="Bold" />
+                    <TextBlock Text="{Binding PassportId}" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="5">
+                    <TextBlock Text="Серийный номер: " HorizontalAlignment="Right"  VerticalAlignment="Center" FontWeight="Bold" />
+                    <TextBlock Text="{Binding PassportNumber}" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="5">
+                    <TextBlock Text="Имя: " HorizontalAlignment="Right"  VerticalAlignment="Center" FontWeight="Bold" />
+                    <TextBlock Text="{Binding Name}" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="5">
+                    <TextBlock Text="Фамилия: " HorizontalAlignment="Right"  VerticalAlignment="Center" FontWeight="Bold" />
+                    <TextBlock Text="{Binding LastName}" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="5">
+                    <TextBlock Text="Отчество: " HorizontalAlignment="Right" VerticalAlignment="Center" FontWeight="Bold" />
+                    <TextBlock Text="{Binding MiddleName}" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="5">
+                    <TextBlock Text="Дата Рождения" HorizontalAlignment="Right" VerticalAlignment="Center" FontWeight="Bold" />
+                    <TextBlock Text="{Binding Birthday}" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120"/>
+                </StackPanel>
+            </StackPanel>
+        </GroupBox>
+
+        <GroupBox Grid.Column="1" Header="Депозит">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="5" >
+                    <TextBlock Text="Тип: " HorizontalAlignment="Right" VerticalAlignment="Center" FontWeight="Bold" />
+                    <ComboBox x:Name="depositTypeComboBox" ItemsSource="{Binding DepositTypes}" SelectedItem="{Binding SelectedDepositType}" Width="200"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="5">
+                    <TextBlock Text="Название: " HorizontalAlignment="Right" VerticalAlignment="Center" FontWeight="Bold" />
+                    <TextBlock Text="{Binding ElementName=depositTypeComboBox, Path=SelectedItem.Name}" Width="150"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="5">
+                    <TextBlock Text="Тип Валюты: " HorizontalAlignment="Right" VerticalAlignment="Center" FontWeight="Bold" />
+                    <TextBlock Text="{Binding ElementName=depositTypeComboBox, Path=SelectedItem.CurrencyType.Name}" Width="150"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="5">
+                    <TextBlock Text="Процент: " HorizontalAlignment="Right" VerticalAlignment="Center" FontWeight="Bold" />
+                    <TextBlock Text="{Binding ElementName=depositTypeComboBox, Path=SelectedItem.Rate}" Width="150"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="5">
+                    <TextBlock Text="Срок: " HorizontalAlignment="Right" VerticalAlignment="Center" FontWeight="Bold" />
+                    <TextBlock Text="{Binding ElementName=depositTypeComboBox, Path=SelectedItem.TermInMonth}" Width="150"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="5">
+                    <TextBlock Text="Досрочное закрытие: " HorizontalAlignment="Right" VerticalAlignment="Center" FontWeight="Bold" />
+                    <TextBlock Text="{Binding ElementName=depositTypeComboBox, Path=SelectedItem.WithWithdraw, Converter={StaticResource boolToEarlyClosingStatusConverter}}" Width="150"/>
+                </StackPanel>
+                <Button Height="30" Width="70" Margin="0,30,0,0" Command="{Binding OpenDepositCommand}" Content="Открыть"/>
+            </StackPanel>
+        </GroupBox>
+    </Grid>
+</Window>

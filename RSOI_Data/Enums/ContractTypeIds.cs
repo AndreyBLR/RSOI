@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RSOI_Data
+namespace RSOI_Data.Enums
 {
-    public static class DataBaseWrapper
+    public enum ContractTypeIds
     {
-
+        Deposit = 1,
+        Credit = 2
     }
 }

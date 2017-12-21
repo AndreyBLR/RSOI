@@ -10,22 +10,18 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 namespace RSOI_UI.Views
 {
     /// <summary>
-    /// Interaction logic for NewClientView.xaml
+    /// Interaction logic for TransferMoneyToDeposit.xaml
     /// </summary>
-    public partial class NewClientView
+    public partial class TransferMoneyToDeposit : Window
     {
-        public NewClientView()
+        public TransferMoneyToDeposit()
         {
-            this.SizeToContent = SizeToContent.Width;
-            this.SizeToContent = SizeToContent.Height;
             InitializeComponent();
-            
         }
     }
 }

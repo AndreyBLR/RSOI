@@ -11,10 +11,41 @@ namespace RSOI_Data.Entities
     {
         public int Id { get; set; }
         public AccountType AccountType { get; set; }
-        public string Number { get; set; }
-        public long Amount { get; set; }
+        public double Amount { get; set; }
         public CurrencyType CurrencyType { get; set; }
         public bool IsActive { get; set; }
+
+        public static IList<Account> GetListOfAccounts()
+        {
+            string queryString = "SELECT * FROM Accounts";
+
+            var accounts = new List<Account>();
+
+            using (OdbcConnection connection = new OdbcConnection(ConnectionString))
+            {
+                OdbcCommand command = new OdbcCommand(queryString, connection);
+
+                connection.Open();
+
+                OdbcDataReader reader = command.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    accounts.Add(new Account()
+                    {
+                        Id = (int) reader["Id"],
+                        AccountType = AccountType.GetAccountTypeById((int) reader["AccountTypeId"]),
+                        Amount = Math.Round((double) reader["Amount"], 2),
+                        CurrencyType = CurrencyType.GetCurrencyTypeById((int) reader["CurrencyTypeId"]),
+                        IsActive = (bool) reader["IsActive"]
+                    });
+                }
+
+                reader.Close();
+            }
+
+            return accounts;
+        }
 
         public static Account GetAccountById(int accountId)
         {
@@ -25,7 +56,7 @@ namespace RSOI_Data.Entities
                 OdbcCommand command = new OdbcCommand(queryString, connection);
 
                 connection.Open();
-                
+
                 OdbcDataReader reader = command.ExecuteReader();
 
                 if (reader.HasRows)
@@ -34,12 +65,11 @@ namespace RSOI_Data.Entities
 
                     return new Account()
                     {
-                        Id = (int)reader["Id"],
-                        AccountType = AccountType.GetAccountTypeById((int)reader["AccountTypeId"]),
-                        Number = (string)reader["Number"],
-                        Amount = (long)reader["Amount"],
-                        CurrencyType = CurrencyType.GetCurrencyTypeById((int)reader["CurrencyTypeId"]),
-                        IsActive = (bool)reader["Email"]
+                        Id = (int) reader["Id"],
+                        AccountType = AccountType.GetAccountTypeById((int) reader["AccountTypeId"]),
+                        Amount = Math.Round((double) reader["Amount"], 2),
+                        CurrencyType = CurrencyType.GetCurrencyTypeById((int) reader["CurrencyTypeId"]),
+                        IsActive = (bool) reader["IsActive"]
                     };
                 }
 
@@ -49,71 +79,146 @@ namespace RSOI_Data.Entities
             return null;
         }
 
-        public bool Save()
+        public static Account GetAccountByType(int typeId)
+        {
+            string queryString = "SELECT * FROM Accounts WHERE AccountTypeId = '" + typeId + "' ";
+
+            using (OdbcConnection connection = new OdbcConnection(ConnectionString))
+            {
+                OdbcCommand command = new OdbcCommand(queryString, connection);
+
+                connection.Open();
+
+                OdbcDataReader reader = command.ExecuteReader();
+
+                if (reader.HasRows)
+                {
+                    reader.Read();
+
+                    return new Account()
+                    {
+                        Id = (int) reader["Id"],
+                        AccountType = AccountType.GetAccountTypeById((int) reader["AccountTypeId"]),
+                        Amount = Math.Round((double) reader["Amount"], 2),
+                        CurrencyType = CurrencyType.GetCurrencyTypeById((int) reader["CurrencyTypeId"]),
+                        IsActive = (bool) reader["IsActive"]
+                    };
+                }
+
+                reader.Close();
+            }
+
+            return null;
+        }
+
+        public static Account GetAccountByTypeAndCurrency(int typeId, int currencyId)
+        {
+            string queryString = "SELECT * FROM Accounts WHERE AccountTypeId = " + typeId + " AND CurrencyTypeId = " +
+                                 currencyId + " ";
+
+            using (OdbcConnection connection = new OdbcConnection(ConnectionString))
+            {
+                OdbcCommand command = new OdbcCommand(queryString, connection);
+
+                connection.Open();
+
+                OdbcDataReader reader = command.ExecuteReader();
+
+                if (reader.HasRows)
+                {
+                    reader.Read();
+
+                    return new Account()
+                    {
+                        Id = (int) reader["Id"],
+                        AccountType = AccountType.GetAccountTypeById((int) reader["AccountTypeId"]),
+                        Amount = Math.Round((double) reader["Amount"],2 ),
+                        CurrencyType = CurrencyType.GetCurrencyTypeById((int) reader["CurrencyTypeId"]),
+                        IsActive = (bool) reader["IsActive"]
+                    };
+                }
+
+                reader.Close();
+            }
+
+            return null;
+        }
+
+        public bool Insert()
         {
             string queryString = "INSERT INTO Accounts " + "(" +
-                                     "AccountTypeId, " +
-                                     "Number, " +
-                                     "Amount, " +
-                                     "CurrencyTypeId, " +
-                                     "IsActive)" +
+                                 "AccountTypeId, " +
+                                 "Amount, " +
+                                 "CurrencyTypeId, " +
+                                 "IsActive)" +
                                  "VALUES ('" +
-                                     AccountType.Id + "','" +
-                                     Number + "','" +
-                                     Amount + "','" +
-                                     CurrencyType.Id + "','" +
-                                     IsActive + "')";
+                                 AccountType.Id + "','" +
+                                 Amount + "','" +
+                                 CurrencyType.Id + "','" +
+                                 IsActive + "')";
 
-            try
+
+
+            using (OdbcConnection connection = new OdbcConnection(ConnectionString))
             {
-                if (string.IsNullOrEmpty(Verify()))
-                {
-                    using (OdbcConnection connection = new OdbcConnection(ConnectionString))
-                    {
-                        connection.Open();
+                connection.Open();
 
-                        var command = new OdbcCommand(queryString, connection);
+                var command = new OdbcCommand(queryString, connection);
 
-                        command.ExecuteNonQuery();
-                    }
-
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
+                command.ExecuteNonQuery();
             }
-            catch (Exception ex)
+
+            Id = GetLastId();
+            return true;
+
+        }
+
+        public bool Update()
+        {
+            string queryString = "UPDATE Accounts SET Amount = " + Amount + " WHERE Id = '" + Id + "'";
+            
+            using (OdbcConnection connection = new OdbcConnection(ConnectionString))
             {
-                return false;
+                connection.Open();
+
+                var command = new OdbcCommand(queryString, connection);
+
+                command.ExecuteNonQuery();
             }
+            return true;
+
         }
 
-        public string Verify()
+        public int GetLastId()
         {
-            var report = string.Empty;
+            string queryString = "SELECT max(Id) FROM Accounts";
 
-            AddToReport(report, VerifyAmount());
 
-            return report;
+            using (OdbcConnection connection = new OdbcConnection(ConnectionString))
+            {
+                OdbcCommand command = new OdbcCommand(queryString, connection);
+
+                connection.Open();
+
+                OdbcDataReader reader = command.ExecuteReader();
+
+                if (reader.HasRows)
+                {
+                    reader.Read();
+                    return (int) reader[""];
+
+                }
+
+                reader.Close();
+            }
+
+
+            return -1;
         }
-        
-        #region Verification
 
-        private string VerifyAmount()
+        public override string ToString()
         {
-            return "";
+            return AccountType.ToString();
         }
-
-        private string AddToReport(string report, string error)
-        {
-            if (!string.IsNullOrEmpty(error))
-                return report + error + "; \n";
-
-            return report;
-        }
-
-        #endregion
     }
 }

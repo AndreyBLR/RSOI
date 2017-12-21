@@ -4,8 +4,39 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:RSOI_UI"
-        Title="MainWindow" >
-    <Grid>
-        <Button Height="50" Width="100" Command="{Binding OpenNewClientWindowCommand}"> Создать Клиента</Button>
-    </Grid>
+        xmlns:views="clr-namespace:RSOI_UI.Views"
+        Title="Курсач" Background="WhiteSmoke">
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_Клиенты">
+                <MenuItem Header="_Зарегистрировать..." Command="{Binding OpenNewClientWindowCommand}" />
+            </MenuItem>
+
+            <MenuItem Header="_Сервис">
+                <MenuItem Header="_Закрытие дня" Command="{Binding CloseOperationalDayCommand}" />
+            </MenuItem>
+        </Menu>
+        <StackPanel Orientation="Vertical">
+            <StackPanel Margin="0,10,0,10" Orientation="Horizontal">
+                <TextBlock>Номер паспорта:</TextBlock>
+                <TextBox Text="{Binding Path=Filter, UpdateSourceTrigger=PropertyChanged }" Width="120"></TextBox>
+            </StackPanel>
+            <DataGrid ItemsSource="{Binding ObservableClients}" SelectedItem="{Binding SelectedClient}" AutoGenerateColumns="False">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Номер Паспорта" Binding="{Binding Passport.SerialNumber}" />
+                    <DataGridTextColumn Header="Фамилия" Binding="{Binding Passport.LastName}" />
+                    <DataGridTextColumn Header="Имя" Binding="{Binding Passport.Name}" />
+                    <DataGridTextColumn Header="Отчество" Binding="{Binding Passport.MiddleName}" />
+                    <DataGridTextColumn Header="Дата Рождения" Binding="{Binding Passport.Birthday}" />
+                    <DataGridTextColumn Header="Моб. Телефон" Binding="{Binding MobilePhone}" />
+                </DataGrid.Columns>
+                <DataGrid.ContextMenu>
+                    <ContextMenu >
+                        <MenuItem Header="Открыть Депозит" Command="{Binding OpenDepositCommand}" />
+                        <MenuItem Header="Список Контрактов" Command="{Binding OpenListOfDepositsCommand}" />
+                    </ContextMenu>
+                </DataGrid.ContextMenu>
+            </DataGrid>
+        </StackPanel>
+    </DockPanel>
 </Window>
