@@ -16,7 +16,8 @@ namespace RSOI_Data.Entities
         public CurrencyType CurrencyType { get; set; }
         public Account CurrentAccount { get; set; }
         public Account InterestAccount { get; set; }
-        public double Amount { get; set; }
+        public double AvailableAmount { get; set; }
+        public double WithdrawAmount { get; set; }
 
         public static Deposit GetById(string number)
         {
@@ -27,8 +28,7 @@ namespace RSOI_Data.Entities
                 OdbcCommand command = new OdbcCommand(queryString, connection);
 
                 connection.Open();
-
-                // Execute the DataReader and access the data.
+                
                 OdbcDataReader reader = command.ExecuteReader();
 
                 if (reader.HasRows)
@@ -44,11 +44,11 @@ namespace RSOI_Data.Entities
                         CurrencyType = CurrencyType.GetCurrencyTypeById((int)reader["CurrencyTypeId"]),
                         CurrentAccount = Account.GetAccountById((int)reader["CurrentAccountId"]),
                         InterestAccount = Account.GetAccountById((int)reader["InterestAccountId"]),
-                        Amount = Math.Round((double) reader["Amount"], 2)
+                        AvailableAmount = Math.Round((double) reader["AvailableAmount"], 2),
+                        WithdrawAmount = Math.Round((double)reader["WithdrawAmount"], 2)
                     };
                 }
 
-                // Call Close when done reading.
                 reader.Close();
             }
 
@@ -65,8 +65,7 @@ namespace RSOI_Data.Entities
                 OdbcCommand command = new OdbcCommand(queryString, connection);
 
                 connection.Open();
-
-                // Execute the DataReader and access the data.
+                
                 OdbcDataReader reader = command.ExecuteReader();
 
                 while(reader.Read())
@@ -80,18 +79,18 @@ namespace RSOI_Data.Entities
                         CurrencyType = CurrencyType.GetCurrencyTypeById((int)reader["CurrencyTypeId"]),
                         CurrentAccount = Account.GetAccountById((int)reader["CurrentAccountId"]),
                         InterestAccount = Account.GetAccountById((int)reader["InterestAccountId"]),
-                        Amount = (double)reader["Amount"]
+                        AvailableAmount = Math.Round((double)reader["AvailableAmount"], 2),
+                        WithdrawAmount = Math.Round((double)reader["WithdrawAmount"], 2)
                     });
                 }
-
-                // Call Close when done reading.
+                
                 reader.Close();
             }
 
             return deposits;
         }
 
-        public bool Insert()
+        public void Insert()
         {
             string queryString = "INSERT INTO Deposits " + "(" +
                                  "Number, " +
@@ -100,7 +99,8 @@ namespace RSOI_Data.Entities
                                  "CurrentAccountId, " +
                                  "InterestAccountId, " +
                                  "CurrencyTypeId, " +
-                                 "Amount, " +
+                                 "AvailableAmount, " +
+                                 "WithdrawAmount, " +
                                  "Rate)" +
                                  "VALUES ('" +
                                  Number + "','" +
@@ -109,80 +109,32 @@ namespace RSOI_Data.Entities
                                  CurrentAccount.Id + "','" +
                                  InterestAccount.Id + "','" +
                                  CurrencyType.Id + "','" +
-                                 Amount + "','" +
+                                 AvailableAmount + "','" +
+                                 WithdrawAmount + "','" +
                                  Rate + "')";
 
-
-            if (string.IsNullOrEmpty(Verify()))
+            using (OdbcConnection connection = new OdbcConnection(ConnectionString))
             {
-                using (OdbcConnection connection = new OdbcConnection(ConnectionString))
-                {
-                    connection.Open();
+                connection.Open();
 
-                    var command = new OdbcCommand(queryString, connection);
+                var command = new OdbcCommand(queryString, connection);
 
-                    command.ExecuteNonQuery();
-                }
-                return true;
+                command.ExecuteNonQuery();
             }
-
-            return false;
-
         }
 
-        public bool Update()
+        public void Update()
         {
-            string queryString = "UPDATE Deposits SET Amount = " + Amount + " WHERE Number = '" + Number + "'";
+            string queryString = "UPDATE Deposits SET AvailableAmount = " + AvailableAmount + ", WithdrawAmount = " + WithdrawAmount + " WHERE Number = '" + Number + "'";
 
-
-            if (string.IsNullOrEmpty(Verify()))
+            using (OdbcConnection connection = new OdbcConnection(ConnectionString))
             {
-                using (OdbcConnection connection = new OdbcConnection(ConnectionString))
-                {
-                    connection.Open();
+                connection.Open();
 
-                    var command = new OdbcCommand(queryString, connection);
+                var command = new OdbcCommand(queryString, connection);
 
-                    command.ExecuteNonQuery();
-                }
-                return true;
+                command.ExecuteNonQuery();
             }
-
-            return false;
-
         }
-
-
-        public string Verify()
-        {
-            var report = string.Empty;
-
-            AddToReport(report, VerifyRate());
-            AddToReport(report, VerifyDates());
-
-            return report;
-        }
-
-        #region Verification
-
-        private string VerifyRate()
-        {
-            return "";
-        }
-
-        private string VerifyDates()
-        {
-            return "";
-        }
-
-        private string AddToReport(string report, string error)
-        {
-            if (!string.IsNullOrEmpty(error))
-                return report + error + "; \n";
-
-            return report;
-        }
-
-        #endregion
     }
 }

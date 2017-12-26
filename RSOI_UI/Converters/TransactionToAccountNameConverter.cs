@@ -23,11 +23,32 @@ namespace RSOI_UI.Converters
                 switch (transaction.TransactionType.Name)
                 {
                     case "Приход (а/п)":
-                        return param == "Account1" ? $"Д{transaction.AccountId1}" : $"Д{transaction.AccountId2}";
+                        if (param == "D")
+                        {
+                            return transaction.AccountId1;
+                        }
+                        else
+                        {
+                            return transaction.AccountId2;
+                        }
                     case "Приход/Расход (п)":
-                        return param == "Account1" ? $"Д{transaction.AccountId1}" : $"К{transaction.AccountId2}";
+                        if (param == "D")
+                        {
+                            return transaction.AccountId2;
+                        }
+                        else
+                        {
+                            return transaction.AccountId1;
+                        }
                     case "Расход (а/п)":
-                        return param == "Account1" ? $"К{transaction.AccountId1}" : $"К{transaction.AccountId2}";
+                        if (param == "D")
+                        {
+                            return transaction.AccountId2;
+                        }
+                        else
+                        {
+                            return transaction.AccountId1;
+                        }
                 }
             }
             

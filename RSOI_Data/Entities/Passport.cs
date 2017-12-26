@@ -10,6 +10,8 @@ namespace RSOI_Data.Entities
 {
     public class Passport : ActiveRecord
     {
+        #region Properties
+
         public string PassportId { get; set; }
         public string SerialNumber { get; set; }
         public DateTime Birthday { get; set; }
@@ -25,10 +27,12 @@ namespace RSOI_Data.Entities
         public FamilyStatus FamilyStatus { get; set; }
         public Nationality Nationality { get; set; }
 
+        #endregion
+
         public Passport()
         {
-            IssueDate = new DateTime(1900, 1, 1);
-            Birthday = new DateTime(1900, 1, 1);
+            Birthday = new DateTime(1970, 1, 1);
+            IssueDate = new DateTime(1970, 1, 1);
         }
 
         public static Passport GetPassportById(string id)
@@ -40,15 +44,14 @@ namespace RSOI_Data.Entities
                 OdbcCommand command = new OdbcCommand(queryString, connection);
 
                 connection.Open();
-
-                // Execute the DataReader and access the data.
+                
                 OdbcDataReader reader = command.ExecuteReader();
 
                 if (reader.HasRows)
                 {
                     reader.Read();
 
-                    return new Passport()
+                    return new Passport
                     {
                         PassportId = (string) reader["IdNumber"],
                         SerialNumber = (string) reader["SerialNumber"],
@@ -67,16 +70,17 @@ namespace RSOI_Data.Entities
                     };
                 }
 
-                // Call Close when done reading.
                 reader.Close();
             }
 
             return null;
         }
 
-        public bool Insert()
+        public void Insert()
         {
-            string queryString = "INSERT INTO Passports " + "(" +
+            if (string.IsNullOrEmpty(Verify()))
+            {
+                string queryString = "INSERT INTO Passports " + "(" +
                                  "IdNumber, " +
                                  "SerialNumber, " +
                                  "Birthday, " +
@@ -108,8 +112,7 @@ namespace RSOI_Data.Entities
                                  Nationality.Id + "')";
 
 
-            if (string.IsNullOrEmpty(Verify()))
-            {
+            
                 using (OdbcConnection connection = new OdbcConnection(ConnectionString))
                 {
                     connection.Open();
@@ -118,31 +121,11 @@ namespace RSOI_Data.Entities
 
                     command.ExecuteNonQuery();
                 }
-
-                return true;
             }
-
-            return false;
-
-        }
-
-        public bool Delete()
-        {
-            string queryString = "DELETE FROM Passports WHERE IdNumber = '" + PassportId + "' ";
-
-
-            using (OdbcConnection connection = new OdbcConnection(ConnectionString))
+            else
             {
-                connection.Open();
-
-                var command = new OdbcCommand(queryString, connection);
-
-                command.ExecuteNonQuery();
+                throw new Exception("INSERT Passport is Failed due to verification of 'Passport' entity fields failed");
             }
-
-            return true;
-
-
         }
 
         public string Verify()
@@ -151,15 +134,22 @@ namespace RSOI_Data.Entities
 
             report = AddToReport(report, VerifyPassportId());
             report = AddToReport(report, VerifySerialNumber());
-            report = AddToReport(report, VerifyBirthPlace());
-            report = AddToReport(report, VerifyBirthday());
+
+            report = AddToReport(report, VerifyLastName());
+            report = AddToReport(report, VerifyName());
+            report = AddToReport(report, VerifyMiddleName());
+
             report = AddToReport(report, VerifyIssueDate());
             report = AddToReport(report, VerifyIssuedBy());
-            report = AddToReport(report, VerifyName());
-            report = AddToReport(report, VerifyLastName());
-            report = AddToReport(report, VerifyMiddleName());
-            report = AddToReport(report, VerifyLastName());
+
+            report = AddToReport(report, VerifyBirthday());
+            report = AddToReport(report, VerifyBirthPlace());
+            
+            report = AddToReport(report, VerifyRegCity());
             report = AddToReport(report, VerifyRegAddress());
+
+            report = AddToReport(report, VerifyNationality());
+            report = AddToReport(report, VerifyFamilyStatus());
 
             return report;
         }
@@ -177,7 +167,7 @@ namespace RSOI_Data.Entities
 
             if (string.IsNullOrEmpty(PassportId))
             {
-                return "Пустой идентификационный номер паспорта.";
+                return "Пустое поле 'Идентификационный Номер Паспорта'";
             }
 
             if (regex.IsMatch(PassportId))
@@ -185,7 +175,7 @@ namespace RSOI_Data.Entities
                 return "";
             }
 
-            return "Проверьте формат идентификационного номера паспорта.";
+            return "Проверьте формат идентификационного номера паспорта";
         }
 
         private string VerifySerialNumber()
@@ -194,7 +184,7 @@ namespace RSOI_Data.Entities
 
             if (string.IsNullOrEmpty(SerialNumber))
             {
-                return "Пустой серийный номер паспорта.";
+                return "Пустое поле 'Серийный Номер Паспорта'";
             }
 
             if (regex.IsMatch(SerialNumber))
@@ -202,14 +192,14 @@ namespace RSOI_Data.Entities
                 return "";
             }
 
-            return "Проверьте формат серийного номера паспорта.";
+            return "Проверьте формат серийного номера паспорта";
         }
 
         private string VerifyBirthday()
         {
             if (Birthday > DateTime.Now || Birthday < new DateTime(1900, 1, 1))
             {
-                return "Проверте дату рождения.";
+                return "Проверте поле 'Дата Рождения'";
             }
 
             return "";
@@ -219,7 +209,7 @@ namespace RSOI_Data.Entities
         {
             if (string.IsNullOrEmpty(IssuedBy))
             {
-                return "Пустое поле 'Кем Выдан'.";
+                return "Пустое поле 'Кем Выдан'";
             }
 
             return "";
@@ -227,9 +217,9 @@ namespace RSOI_Data.Entities
 
         private string VerifyIssueDate()
         {
-            if (Birthday > DateTime.Now || Birthday < new DateTime(1900, 1, 1))
+            if (IssueDate > Birthday)
             {
-                return "Проверте дату выдачи паспорта.";
+                return "Проверте поле 'Дата Выдачи Паспорта'";
             }
 
             return "";
@@ -239,7 +229,7 @@ namespace RSOI_Data.Entities
         {
             if (string.IsNullOrEmpty(Name))
             {
-                return "Пустое поле 'Имя'.";
+                return "Пустое поле 'Имя'";
             }
 
             return "";
@@ -249,7 +239,7 @@ namespace RSOI_Data.Entities
         {
             if (string.IsNullOrEmpty(MiddleName))
             {
-                return "Пустое поле 'Отчество'.";
+                return "Пустое поле 'Отчество'";
             }
 
             return "";
@@ -259,7 +249,7 @@ namespace RSOI_Data.Entities
         {
             if (string.IsNullOrEmpty(LastName))
             {
-                return "Пустое поле 'Фамилия'.";
+                return "Пустое поле 'Фамилия'";
             }
 
             return "";
@@ -269,7 +259,17 @@ namespace RSOI_Data.Entities
         {
             if (string.IsNullOrEmpty(BirthPlace))
             {
-                return "Пустое поле 'Место Рождения'.";
+                return "Пустое поле 'Место Рождения'";
+            }
+
+            return "";
+        }
+
+        private string VerifyRegCity()
+        {
+            if (RegCity == null)
+            {
+                return "Пустое поле 'Город Прописки'";
             }
 
             return "";
@@ -279,7 +279,27 @@ namespace RSOI_Data.Entities
         {
             if (string.IsNullOrEmpty(RegAddress))
             {
-                return "Пустое поле 'Адрес Регистрации'.";
+                return "Пустое поле 'Адрес Прописки'";
+            }
+
+            return "";
+        }
+        
+        private string VerifyNationality()
+        {
+            if (RegCity == null)
+            {
+                return "Пустое поле 'Национальность'";
+            }
+
+            return "";
+        }
+
+        private string VerifyFamilyStatus()
+        {
+            if (RegCity == null)
+            {
+                return "Пустое поле 'Семейный Статус'";
             }
 
             return "";

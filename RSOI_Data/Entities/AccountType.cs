@@ -71,9 +71,14 @@ namespace RSOI_Data.Entities
             return accountTypes;
         }
 
+        public string GetId()
+        {
+            return Id.ToString();
+        }
+
         public override string ToString()
         {
-            return $"{Id} ({Name})";
+            return Name;
         }
     }
 }

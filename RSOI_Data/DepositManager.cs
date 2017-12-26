@@ -1,86 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data.Odbc;
-using System.Diagnostics;
-using System.Linq;
-using System.Net.Security;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+using System.Threading;
+using RSOI_Data.Entities;
 using RSOI_Data.Enums;
 
-namespace RSOI_Data.Entities
+namespace RSOI_Data
 {
     public class DepositManager
     {
-        #region Constants
-
-        private string _charsToUse = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
-
-        #region Transaction Types
-
-        private readonly TransactionType _income = new TransactionType()
-        {
-            Id = 3,
-            Name = "Приход (а/п)"
-        };
-
-        private readonly TransactionType _incomeExpensePassive = new TransactionType()
-        {
-            Id = 4,
-            Name = "Приход/Расход (п)"
-        };
-
-        private readonly TransactionType _expense = new TransactionType()
-        {
-            Id = 5,
-            Name = "Расход (а/п)"
-        };
-        
-        #endregion
-
-        private readonly ContractType _depositContactType = new ContractType()
-        {
-            Id = 1,
-            Name = "Депозит"
-        };
-
-        #region Accounts
-
-        private readonly AccountType _currentAccountType = new AccountType()
-        {
-            Id = 3,
-            Name = "Текущий счёт"
-        };
-
-        private readonly AccountType _interestAccountType = new AccountType()
-        {
-            Id = 4,
-            Name = "Процентный счёт"
-        };
-
-        private readonly AccountType _cashOfficeAccountType = new AccountType()
-        {
-            Id = 5,
-            Name = "Касса"
-        };
-
-        private readonly AccountType _bankFundAccountType = new AccountType()
-        {
-            Id = 6,
-            Name = "Фонд развития банка"
-        };
-
-        #endregion
-
-        #endregion
+        private Credentials _currentOperator;
 
         private static DepositManager _depositManager;
+
         public static DepositManager Instance
         {
             get
             {
-                if(_depositManager == null)
+                if (_depositManager == null)
                     _depositManager = new DepositManager();
 
                 return _depositManager;
@@ -91,22 +27,37 @@ namespace RSOI_Data.Entities
         {
             var dailyRate = deposit.Rate / 365;
 
-            return (deposit.Amount + deposit.InterestAccount.Amount) / 100 * dailyRate;
+            return (deposit.AvailableAmount + deposit.InterestAccount.Amount) / 100 * dailyRate;
         }
 
-        private DepositManager()
+        public static double CalculateDepositIncomeByMinRate(Deposit deposit, int days)
         {
+            double result = 0;
+            double _minRate = 0.1;
+
+            for (int i = 0; i < days; i++)
+            {
+                result += (deposit.AvailableAmount + deposit.InterestAccount.Amount + result) / 100 * _minRate;
+            }
+
+            return result;
+        }
+
+        public void SetCurrentOperator(Credentials currentOperator)
+        {
+            _currentOperator = currentOperator;
         }
 
         public Deposit OpenDeposit(Client client, DepositType depositType)
         {
             var generatedNumber = GenerateContractNumber();
-            
+
             var currentAccount = new Account
             {
                 CurrencyType = depositType.CurrencyType,
                 Amount = 0,
-                AccountType = _currentAccountType,
+                Number = generatedNumber,
+                AccountType = new AccountType() {Id = (int) AccountTypeIds.Current},
                 IsActive = false
             };
 
@@ -114,7 +65,8 @@ namespace RSOI_Data.Entities
             {
                 CurrencyType = depositType.CurrencyType,
                 Amount = 0,
-                AccountType = _interestAccountType,
+                Number = generatedNumber,
+                AccountType = new AccountType() {Id = (int) AccountTypeIds.Interest},
                 IsActive = false
             };
 
@@ -122,9 +74,10 @@ namespace RSOI_Data.Entities
             {
                 Client = client,
                 Number = generatedNumber,
-                ContractType = _depositContactType,
+                ContractType = new ContractType() {Id = (int) ContractTypeIds.Deposit},
                 IsClosed = false,
-                EarlyClosing = depositType.WithWithdraw
+                EarlyClosing = depositType.WithWithdraw,
+                Operator = _currentOperator
             };
 
             var deposit = new Deposit
@@ -133,7 +86,7 @@ namespace RSOI_Data.Entities
                 OpenDate = DateTime.Now,
                 Number = generatedNumber,
                 Rate = depositType.Rate,
-                Amount = 0,
+                AvailableAmount = 0,
                 CurrentAccount = currentAccount,
                 InterestAccount = interestAccount
             };
@@ -148,25 +101,42 @@ namespace RSOI_Data.Entities
             return deposit;
         }
 
-        public bool CloseDeposit(Deposit deposit)
+        public void CloseDeposit(Deposit deposit, bool earlyClose)
         {
-            try
+            if (earlyClose)
             {
-                var contract = Contract.GetContractByNumber(deposit.Number);
-                contract.IsClosed = true;
+                var days = (DateTime.Now - deposit.OpenDate).Days;
 
-                contract.Update();
+                var recalculatedInterestAmount = CalculateDepositIncomeByMinRate(deposit, days);
+                TransactionFromInterestAccountToBankFund(deposit, deposit.InterestAccount.Amount,
+                    "Возврат средств процентного счёта в фонд банка в связи с досрочным закрытием депозита");
+                TransactionFromBankFundToInterestAccount(deposit, recalculatedInterestAmount,
+                    "Начисление средств на процентный счёт депозита по мин. ставке 0.01%");
+
+                if (deposit.WithdrawAmount > 0)
+                {
+                    TransactionFromСurrentAccountToBankFund(deposit, deposit.WithdrawAmount, "Возврат суммы уже снятых процентов в фонд банка.");
+                }
+
+                var forWithdrawFromCurrent = deposit.AvailableAmount - deposit.WithdrawAmount;
+                var forWithdrawFromInterest = deposit.InterestAccount.Amount;
+                WithdrawFromCurrentAccount(deposit, forWithdrawFromCurrent);
+                WithdrawFromInterestAccount(deposit, forWithdrawFromInterest);
             }
-            catch (Exception ex)
+            else
             {
-                Debug.Write(ex);
-                return false;
+                WithdrawFromCurrentAccount(deposit, deposit.AvailableAmount);
+                WithdrawFromInterestAccount(deposit, deposit.InterestAccount.Amount);
             }
 
-            return true;
+            var contract = Contract.GetContractByNumber(deposit.Number);
+            contract.Operator = _currentOperator;
+            contract.IsClosed = true;
+
+            contract.Update();
         }
-
-        public bool AddToCurrentAccount(Deposit deposit, double sum, string passportSNumber, string fio)
+        
+        public void TransferToCurrentAccount(Deposit deposit, double sum, string passportSNumber, string fio)
         {
             var payerInfo = new PayerInfo()
             {
@@ -174,226 +144,168 @@ namespace RSOI_Data.Entities
                 PassportSNumber = passportSNumber
             };
 
-            return TransactionFromCashOfficeToCurrentAccount(deposit, sum, "Внесение средств на депозит", payerInfo);
+            TransactionFromCashOfficeToCurrentAccount(deposit, sum, "Внесение средств на депозит", payerInfo);
+            TransactionFromСurrentAccountToBankFund(deposit, sum, "Перевод средств на счёт банковского фонда");
         }
 
-        public bool AddToInterestAccounts(Deposit deposit, double sum)
+        public void TransferToInterestAccounts(Deposit deposit, double sum)
         {
             TransactionFromBankFundToInterestAccount(deposit, sum, "Начисление средств на процентный счёт депозита");
-
-            return true;
         }
 
-        public bool WithdrayFromCurrentAccount(Deposit deposit, double sum)
+        public void WithdrawFromCurrentAccount(Deposit deposit, double sum)
         {
-            var result = TransactionFromBankFundToCurrentAccount(deposit, sum, "Перевод средств с банковского фонда на основной счёт депозита.");
-            result = result && TransactionFromСurrentAccountToCashOffice(deposit, sum, "Снятие средств с основного счёта депозита");
-           
-            return result;
+            TransactionFromBankFundToCurrentAccount(deposit, sum, "Перевод средств с банковского фонда на основной счёт депозита");
+            TransactionFromСurrentAccountToCashOffice(deposit, sum, "Списание средств с основного счёта депозита");
         }
 
-        public bool WithdrayFromInterestAccount(Deposit deposit, double sum)
+        public void WithdrawFromInterestAccount(Deposit deposit, double sum)
         {
-            return TransactionFromInterestAccountToCashOffice(deposit, sum, "Снятие средств с процентного счёта депозита");
+            TransactionFromInterestAccountToCashOffice(deposit, sum, "Списание средств с процентного счёта депозита");
         }
-        
-        public void ZeroyingInterestAccount(Deposit deposit, string description)
-        {
-            TransactionFromInterestAccountToBankFund(deposit, deposit.InterestAccount.Amount, description);
-        }
-        
+
         #region  Transactions
 
-        private bool TransactionFromCashOfficeToCurrentAccount(Deposit deposit, double sum, string description, PayerInfo payerInfo)
+        private void TransactionFromCashOfficeToCurrentAccount(Deposit deposit, double sum, string description, PayerInfo payerInfo)
         {
-            var cashOfficeAccount = Account.GetAccountByTypeAndCurrency(_cashOfficeAccountType.Id, deposit.CurrencyType.Id);
+            var cashOfficeAccount = Account.GetAccountByTypeAndCurrency((int) AccountTypeIds.CashOffice, deposit.CurrencyType.Id);
 
-            if (CreateTransaction(cashOfficeAccount, deposit.CurrentAccount, _income, sum, description, payerInfo))
-            {
-                cashOfficeAccount.Amount += sum;
-                cashOfficeAccount.Update();
+            CreateTransaction(cashOfficeAccount, deposit.CurrentAccount, TransactionTypeIds.Income, sum, description, payerInfo);
 
-                deposit.CurrentAccount.Amount += sum;
-                deposit.CurrentAccount.Update();
+            cashOfficeAccount.Amount += sum;
+            cashOfficeAccount.Update();
 
-                deposit.Amount += sum;
-                deposit.Update();
+            deposit.CurrentAccount.Amount += sum;
+            deposit.CurrentAccount.Update();
 
-                return true;
-            }
-
-            return false;
+            deposit.AvailableAmount += sum;
+            deposit.Update();
         }
 
-        private bool TransactionFromCurrentAccountToBankFund(Deposit deposit, double sum, string description)
+        private void TransactionFromBankFundToInterestAccount(Deposit deposit, double sum, string description)
         {
-            var bankFundAccount = Account.GetAccountByTypeAndCurrency(_bankFundAccountType.Id, deposit.CurrencyType.Id);
+            var bankFundAccount = Account.GetAccountByTypeAndCurrency((int) AccountTypeIds.BankFund, deposit.CurrencyType.Id);
 
-            if (CreateTransaction(bankFundAccount, deposit.CurrentAccount, _incomeExpensePassive, sum, description))
-            {
-                bankFundAccount.Amount += sum;
-                bankFundAccount.Update();
+            CreateTransaction(deposit.InterestAccount, bankFundAccount, TransactionTypeIds.IncomeExpense, sum,description);
 
-                deposit.CurrentAccount.Amount -= sum;
-                deposit.CurrentAccount.Update();
+            deposit.InterestAccount.Amount += sum;
+            deposit.InterestAccount.Update();
 
-                return true;
-            }
-
-            return false;
-        }
-        
-        private bool TransactionFromBankFundToInterestAccount(Deposit deposit, double sum, string description)
-        {
-            var bankFundAccount = Account.GetAccountByTypeAndCurrency(_bankFundAccountType.Id, deposit.CurrencyType.Id);
-
-            if (CreateTransaction(deposit.InterestAccount, bankFundAccount, _incomeExpensePassive, sum, description))
-            {
-                deposit.InterestAccount.Amount += sum;
-                deposit.InterestAccount.Update();
-
-                bankFundAccount.Amount -= sum;
-                bankFundAccount.Update();
-
-                return true;
-            }
-
-            return false;
+            bankFundAccount.Amount -= sum;
+            bankFundAccount.Update();
         }
 
-        private bool TransactionFromInterestAccountToCashOffice(Deposit deposit, double sum, string description)
+        private void TransactionFromInterestAccountToCashOffice(Deposit deposit, double sum, string description)
         {
-            var cashOfficeAccount = Account.GetAccountByTypeAndCurrency(_cashOfficeAccountType.Id, deposit.CurrencyType.Id);
+            var cashOfficeAccount = Account.GetAccountByTypeAndCurrency((int) AccountTypeIds.CashOffice, deposit.CurrencyType.Id);
 
-            if (CreateTransaction(deposit.InterestAccount, cashOfficeAccount, _expense, sum, description))
-            {
-                cashOfficeAccount.Amount -= sum;
-                cashOfficeAccount.Update();
+            CreateTransaction(cashOfficeAccount, deposit.InterestAccount, TransactionTypeIds.Expense, sum, description);
 
-                deposit.InterestAccount.Amount -= sum;
-                deposit.InterestAccount.Update();
+            cashOfficeAccount.Amount -= sum;
+            cashOfficeAccount.Update();
 
-                return true;
-            }
+            deposit.InterestAccount.Amount -= sum;
+            deposit.InterestAccount.Update();
 
-            return false;
+            deposit.WithdrawAmount += sum;
+            deposit.Update();
         }
 
-        private bool TransactionFromСurrentAccountToCashOffice(Deposit deposit, double sum, string description)
+        private void TransactionFromСurrentAccountToCashOffice(Deposit deposit, double sum, string description)
         {
-            var cashOfficeAccount = Account.GetAccountByTypeAndCurrency(_cashOfficeAccountType.Id, deposit.CurrencyType.Id);
+            var cashOfficeAccount = Account.GetAccountByTypeAndCurrency((int) AccountTypeIds.CashOffice, deposit.CurrencyType.Id);
 
-            if (CreateTransaction(deposit.CurrentAccount, cashOfficeAccount, _expense, sum, description))
-            {
-                cashOfficeAccount.Amount -= sum;
-                cashOfficeAccount.Update();
+            CreateTransaction(cashOfficeAccount, deposit.CurrentAccount, TransactionTypeIds.Expense, sum, description);
 
-                deposit.CurrentAccount.Amount -= sum;
-                deposit.CurrentAccount.Update();
+            cashOfficeAccount.Amount -= sum;
+            cashOfficeAccount.Update();
 
-                deposit.Amount -= sum;
-                deposit.Update();
+            deposit.CurrentAccount.Amount -= sum;
+            deposit.CurrentAccount.Update();
 
-                return true;
-            }
-
-            return false;
+            deposit.AvailableAmount -= sum;
+            deposit.Update();
         }
 
-        private bool TransactionFromInterestAccountToBankFund(Deposit deposit, double sum, string description)
+        private void TransactionFromСurrentAccountToBankFund(Deposit deposit, double sum, string description)
         {
-            var bankFundAccount = Account.GetAccountByTypeAndCurrency(_bankFundAccountType.Id, deposit.CurrencyType.Id);
+            var bankFundAccount = Account.GetAccountByTypeAndCurrency((int) AccountTypeIds.BankFund, deposit.CurrencyType.Id);
 
-            if (CreateTransaction(bankFundAccount, deposit.InterestAccount, _incomeExpensePassive, sum, description))
-            {
-                bankFundAccount.Amount += sum;
-                bankFundAccount.Update();
+            CreateTransaction(bankFundAccount, deposit.CurrentAccount, TransactionTypeIds.IncomeExpense, sum, description);
 
-                deposit.InterestAccount.Amount -= sum;
-                deposit.InterestAccount.Update();
+            bankFundAccount.Amount += sum;
+            bankFundAccount.Update();
 
-                return true;
-            }
-
-            return false;
-        }
-        
-        private bool TransactionFromBankFundToCurrentAccount(Deposit deposit, double sum, string description)
-        {
-            var bankFundAccount = Account.GetAccountByTypeAndCurrency(_bankFundAccountType.Id, deposit.CurrencyType.Id);
-
-            if (CreateTransaction(deposit.CurrentAccount, bankFundAccount, _incomeExpensePassive, sum, description))
-            {
-                deposit.CurrentAccount.Amount += sum;
-                deposit.CurrentAccount.Update();
-
-                bankFundAccount.Amount -= sum;
-                bankFundAccount.Update();
-
-                return true;
-            }
-
-            return false;
+            deposit.CurrentAccount.Amount -= sum;
+            deposit.CurrentAccount.Update();
         }
 
-        private bool CreateTransaction(Account account1, Account account2, TransactionType transactionType, double sum, string description)
+        private void TransactionFromInterestAccountToBankFund(Deposit deposit, double sum, string description)
         {
-            try
-            {
-                var operation = new Transaction()
-                {
-                    AccountId1 = account1,
-                    AccountId2 = account2,
-                    Description = description,
-                    TransactionType = transactionType,
-                    Sum = sum,
-                    DateTime = DateTime.Now
-                };
+            var bankFundAccount = Account.GetAccountByTypeAndCurrency((int) AccountTypeIds.BankFund, deposit.CurrencyType.Id);
 
-                operation.Insert();
+            CreateTransaction(bankFundAccount, deposit.InterestAccount, TransactionTypeIds.IncomeExpense, sum, description);
 
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Debug.Write(ex);
-                return false;
-            }
+            bankFundAccount.Amount += sum;
+            bankFundAccount.Update();
+
+            deposit.InterestAccount.Amount -= sum;
+            deposit.InterestAccount.Update();
         }
 
-        private bool CreateTransaction(Account account1, Account account2, TransactionType transactionType, double sum, string description, PayerInfo payerInfo)
+        private void TransactionFromBankFundToCurrentAccount(Deposit deposit, double sum, string description)
         {
-            try
-            {
-                var operation = new Transaction()
-                {
-                    AccountId1 = account1,
-                    AccountId2 = account2,
-                    Description = description,
-                    TransactionType = transactionType,
-                    Sum = sum,
-                    DateTime = DateTime.Now,
-                    PayerInfo = payerInfo
-                };
+            var bankFundAccount = Account.GetAccountByTypeAndCurrency((int) AccountTypeIds.BankFund, deposit.CurrencyType.Id);
 
-                operation.Insert();
+            CreateTransaction(deposit.CurrentAccount, bankFundAccount, TransactionTypeIds.IncomeExpense, sum, description);
 
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Debug.Write(ex);
-                return false;
-            }
+            deposit.CurrentAccount.Amount += sum;
+            deposit.CurrentAccount.Update();
+
+            bankFundAccount.Amount -= sum;
+            bankFundAccount.Update();
         }
 
+        private void CreateTransaction(Account account1, Account account2, TransactionTypeIds transactionTypeId, double sum, string description)
+        {
+            var operation = new Transaction()
+            {
+                AccountId1 = account1,
+                AccountId2 = account2,
+                Description = description,
+                TransactionType = new TransactionType() {Id = (int) transactionTypeId},
+                Sum = sum,
+                DateTime = DateTime.Now,
+                Operator = _currentOperator
+            };
+
+            operation.Insert();
+        }
+
+        private void CreateTransaction(Account account1, Account account2, TransactionTypeIds transactionTypeId, double sum, string description, PayerInfo payerInfo)
+        {
+            var operation = new Transaction()
+            {
+                AccountId1 = account1,
+                AccountId2 = account2,
+                Description = description,
+                TransactionType = new TransactionType() {Id = (int) transactionTypeId},
+                Sum = sum,
+                DateTime = DateTime.Now,
+                PayerInfo = payerInfo,
+                Operator = _currentOperator
+            };
+
+            operation.Insert();
+        }
 
         #endregion
 
         private string GenerateContractNumber()
         {
+            var _charsToUse = "1234567890";
             var rn = new Random();
-            return Regex.Replace("XXXXXX", "X", (Match m)=> _charsToUse[rn.Next(_charsToUse.Length)].ToString());
+            return Regex.Replace("XXXXXXXXX", "X", (Match m) => _charsToUse[rn.Next(_charsToUse.Length)].ToString());
         }
     }
 }

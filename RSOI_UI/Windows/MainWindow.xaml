@@ -1,0 +1,59 @@
+﻿<Window x:Class="RSOI_UI.Windows.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:converters="clr-namespace:RSOI_UI.Converters"
+        Title="Программное средство ''" Background="WhiteSmoke">
+    <Window.InputBindings>
+        <KeyBinding Command="{Binding RegisterClientCommand}" Modifiers="Shift" Key="R" />
+        <KeyBinding Command="{Binding CloseOperationalDayCommand}" Modifiers="Shift" Key="C" />
+        <KeyBinding Command="{Binding ShowContractsCommand}" Modifiers="Shift" Key="V" /> 
+        <KeyBinding Command="{Binding OpenDepositCommand}" Modifiers="Shift" Key="O" />
+    </Window.InputBindings>
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary>
+                    <converters:DateTimeToDateConverter x:Key="dateTimeToDateConverter" />
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_Клиенты">
+                <MenuItem Header="_Зарегистрировать.." Command="{Binding RegisterClientCommand}" InputGestureText="Shift+R"  />
+            </MenuItem>
+            <MenuItem Header="_Сервис">
+                <MenuItem Header="_Закрыть день" Command="{Binding CloseOperationalDayCommand}" InputGestureText="Shift+C" />
+                <MenuItem Header="_Закрыть приложение" Command="{Binding CloseApplicationCommand}" />
+            </MenuItem>
+        </Menu>
+        <StackPanel Orientation="Vertical" Margin="10,0,10,0">
+            <StackPanel Margin="0,10,0,10" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Margin="0,0,10,0">Номер паспорта:</TextBlock>
+                <TextBox Text="{Binding Path=Filter, UpdateSourceTrigger=PropertyChanged }" Width="120"></TextBox>
+            </StackPanel>
+            <DataGrid ItemsSource="{Binding FilteredClients}" SelectedItem="{Binding SelectedClient}" AutoGenerateColumns="False" IsReadOnly="True">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Номер Паспорта" Binding="{Binding Passport.SerialNumber}" />
+                    <DataGridTextColumn Header="Идентификационный Номер" Binding="{Binding Passport.PassportId}" />
+                    <DataGridTextColumn Header="Фамилия" MinWidth="70" Binding="{Binding Passport.LastName}" />
+                    <DataGridTextColumn Header="Имя" MinWidth="70" Binding="{Binding Passport.Name}" />
+                    <DataGridTextColumn Header="Отчество" MinWidth="70" Binding="{Binding Passport.MiddleName}" />
+                    <DataGridTextColumn Header="Дата Рождения" Binding="{Binding Path=Passport.Birthday, Converter={StaticResource dateTimeToDateConverter}}" />
+                    <DataGridTextColumn Header="Моб. Телефон" Binding="{Binding MobilePhone}" />
+                    <DataGridTextColumn Header="Город Проживания" Binding="{Binding City}" />
+                    <DataGridTextColumn Header="Город Проживания" Binding="{Binding Address}" />
+                    <DataGridTextColumn Header="Место Работы" Binding="{Binding WorkPlace}" />
+                    <DataGridTextColumn Header="Должность" Binding="{Binding WorkPosition}" />
+                </DataGrid.Columns>
+                <DataGrid.ContextMenu>
+                    <ContextMenu >
+                        <MenuItem Header="Открыть Депозит" Command="{Binding OpenDepositCommand}" InputGestureText="Shift+O" />
+                        <MenuItem Header="Список Договоров" Command="{Binding ShowContractsCommand}" InputGestureText="Shift+V" />
+                    </ContextMenu>
+                </DataGrid.ContextMenu>
+            </DataGrid>
+        </StackPanel>
+    </DockPanel>
+</Window>

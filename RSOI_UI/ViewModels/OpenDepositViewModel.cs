@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Input;
-using Prism.Commands;
+using System.Windows;
+using RSOI_Data;
 using RSOI_Data.Entities;
-using RSOI_UI.Views;
+using RSOI_UI.Commands;
+
+using OpenDepositWindow = RSOI_UI.Windows.OpenDepositWindow;
+using TransferMoneyWindow = RSOI_UI.Windows.TransferMoneyWindow;
 
 namespace RSOI_UI.ViewModels
 {
@@ -14,15 +15,20 @@ namespace RSOI_UI.ViewModels
     {
         private Client _client;
         private DepositType _selectedDepositType;
-        private OpenDeposit _openDepositWindow;
+        private OpenDepositWindow _openDepositWindow;
         private IList<DepositType> _depositTypeList;
 
-        public string PassportId => _client.Passport.PassportId;
-        public string PassportNumber => _client.Passport.SerialNumber;
-        public string Name => _client.Passport.Name;
-        public string LastName => _client.Passport.LastName;
-        public string MiddleName => _client.Passport.MiddleName;
-        public string Birthday => _client.Passport.Birthday.ToString("d");
+        #region Presentation Properties
+
+        public Client Client
+        {
+            get => _client;
+            set
+            {
+                _client = value;
+                OnPropertyChanged();
+            }
+        }
 
         public IList<DepositType> DepositTypes
         {
@@ -34,19 +40,21 @@ namespace RSOI_UI.ViewModels
             }
         }
 
-        public DepositType SelectedDepositType {
+        public DepositType SelectedDepositType
+        {
             get => _selectedDepositType;
             set
             {
                 _selectedDepositType = value;
                 OnPropertyChanged();
-                RaiseCanExecuteChanged(_openDepositCommand);
             }
         }
-        
-        public OpenDepositViewModel(OpenDeposit openDepositWindow, Client client)
+
+        #endregion
+
+        public OpenDepositViewModel(OpenDepositWindow openDepositWindow, Client client)
         {
-            _client = client;
+            Client = client;
             _openDepositWindow = openDepositWindow;
             _depositTypeList = DepositType.GetListOfDepositTypes();
         }
@@ -69,14 +77,22 @@ namespace RSOI_UI.ViewModels
 
         private void OpenDepositExecute()
         {
-            var deposit = DepositManager.Instance.OpenDeposit(_client, SelectedDepositType);
+            if (MessageBox.Show("Вы действительно хотите открыть депозит?", "Предупреждение", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+            {
+                try
+                {
+                    var deposit = DepositManager.Instance.OpenDeposit(Client, SelectedDepositType);
 
-            var transferMoneyToDepositWindow = new TransferMoneyToDeposit();
-            transferMoneyToDepositWindow.DataContext = new TransferMoneyToDepositViewModel(transferMoneyToDepositWindow, _client, deposit);
-
-            transferMoneyToDepositWindow.ShowDialog();
-
-            _openDepositWindow.Close();
+                    var transferMoneyWindow = new TransferMoneyWindow(Client, deposit);
+                    transferMoneyWindow.ShowDialog();
+                    _openDepositWindow.Close();
+                    MessageBox.Show($"Депозит открыт: {deposit.Number}", "Оповещение", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Не удалось открыть депозит: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
         }
 
         #endregion

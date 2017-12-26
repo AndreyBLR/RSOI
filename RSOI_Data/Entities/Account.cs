@@ -4,12 +4,14 @@ using System.Data.Odbc;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using RSOI_Data.Enums;
 
 namespace RSOI_Data.Entities
 {
     public class Account : ActiveRecord
     {
         public int Id { get; set; }
+        public string Number { get; set; }
         public AccountType AccountType { get; set; }
         public double Amount { get; set; }
         public CurrencyType CurrencyType { get; set; }
@@ -36,6 +38,7 @@ namespace RSOI_Data.Entities
                         Id = (int) reader["Id"],
                         AccountType = AccountType.GetAccountTypeById((int) reader["AccountTypeId"]),
                         Amount = Math.Round((double) reader["Amount"], 2),
+                        Number = reader["Number"] != DBNull.Value ? (string)reader["Number"] : "",
                         CurrencyType = CurrencyType.GetCurrencyTypeById((int) reader["CurrencyTypeId"]),
                         IsActive = (bool) reader["IsActive"]
                     });
@@ -69,6 +72,7 @@ namespace RSOI_Data.Entities
                         AccountType = AccountType.GetAccountTypeById((int) reader["AccountTypeId"]),
                         Amount = Math.Round((double) reader["Amount"], 2),
                         CurrencyType = CurrencyType.GetCurrencyTypeById((int) reader["CurrencyTypeId"]),
+                        Number = reader["Number"] != DBNull.Value ? (string)reader["Number"] : "",
                         IsActive = (bool) reader["IsActive"]
                     };
                 }
@@ -100,6 +104,7 @@ namespace RSOI_Data.Entities
                         Id = (int) reader["Id"],
                         AccountType = AccountType.GetAccountTypeById((int) reader["AccountTypeId"]),
                         Amount = Math.Round((double) reader["Amount"], 2),
+                        Number = reader["Number"] != DBNull.Value ? (string)reader["Number"] : "",
                         CurrencyType = CurrencyType.GetCurrencyTypeById((int) reader["CurrencyTypeId"]),
                         IsActive = (bool) reader["IsActive"]
                     };
@@ -113,8 +118,7 @@ namespace RSOI_Data.Entities
 
         public static Account GetAccountByTypeAndCurrency(int typeId, int currencyId)
         {
-            string queryString = "SELECT * FROM Accounts WHERE AccountTypeId = " + typeId + " AND CurrencyTypeId = " +
-                                 currencyId + " ";
+            string queryString = "SELECT * FROM Accounts WHERE AccountTypeId = " + typeId + " AND CurrencyTypeId = " + currencyId + " ";
 
             using (OdbcConnection connection = new OdbcConnection(ConnectionString))
             {
@@ -133,6 +137,7 @@ namespace RSOI_Data.Entities
                         Id = (int) reader["Id"],
                         AccountType = AccountType.GetAccountTypeById((int) reader["AccountTypeId"]),
                         Amount = Math.Round((double) reader["Amount"],2 ),
+                        Number = reader["Number"] != DBNull.Value ? (string)reader["Number"] : "",
                         CurrencyType = CurrencyType.GetCurrencyTypeById((int) reader["CurrencyTypeId"]),
                         IsActive = (bool) reader["IsActive"]
                     };
@@ -144,16 +149,18 @@ namespace RSOI_Data.Entities
             return null;
         }
 
-        public bool Insert()
+        public void Insert()
         {
             string queryString = "INSERT INTO Accounts " + "(" +
                                  "AccountTypeId, " +
                                  "Amount, " +
+                                 "Number, " + 
                                  "CurrencyTypeId, " +
                                  "IsActive)" +
                                  "VALUES ('" +
                                  AccountType.Id + "','" +
                                  Amount + "','" +
+                                 Number + "','" +
                                  CurrencyType.Id + "','" +
                                  IsActive + "')";
 
@@ -169,11 +176,9 @@ namespace RSOI_Data.Entities
             }
 
             Id = GetLastId();
-            return true;
-
         }
 
-        public bool Update()
+        public void Update()
         {
             string queryString = "UPDATE Accounts SET Amount = " + Amount + " WHERE Id = '" + Id + "'";
             
@@ -185,15 +190,17 @@ namespace RSOI_Data.Entities
 
                 command.ExecuteNonQuery();
             }
-            return true;
-
         }
 
-        public int GetLastId()
+        public override string ToString()
+        {
+            return GetIBAN();
+        }
+
+        private int GetLastId()
         {
             string queryString = "SELECT max(Id) FROM Accounts";
-
-
+            
             using (OdbcConnection connection = new OdbcConnection(ConnectionString))
             {
                 OdbcCommand command = new OdbcCommand(queryString, connection);
@@ -206,19 +213,17 @@ namespace RSOI_Data.Entities
                 {
                     reader.Read();
                     return (int) reader[""];
-
                 }
 
                 reader.Close();
             }
 
-
             return -1;
         }
 
-        public override string ToString()
+        private string GetIBAN()
         {
-            return AccountType.ToString();
+            return $"BY131782{AccountType.GetId()}{Number}0000{CurrencyType.GetId()}";
         }
     }
 }

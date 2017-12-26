@@ -1,0 +1,58 @@
+﻿<Window x:Class="RSOI_UI.Windows.DepositWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:converters="clr-namespace:RSOI_UI.Converters"
+        Title="Выписка по депозиту" Background="WhiteSmoke" x:Name="window">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary>
+                    <converters:TransactionToAccountNameConverter x:Key="transactionToAccountNameConverter" />
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid>
+        <StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="20,10,0,0">
+                <TextBlock Text="Номер: " FontWeight="Bold" />
+                <TextBlock Text="{Binding Deposit.Number}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="20,10,0,0">
+                <TextBlock Text="Дата Открытия: " FontWeight="Bold" />
+                <TextBlock Text="{Binding Deposit.OpenDate}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="20,10,0,0">
+                <TextBlock Text="Дата Закрытия: " FontWeight="Bold" />
+                <TextBlock Text="{Binding Deposit.CloseDate}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="20,10,0,0">
+                <TextBlock Text="Сумма депозита: " FontWeight="Bold" />
+                <TextBlock Text="{Binding Deposit.AvailableAmount}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="20,10,0,0">
+                <TextBlock Text="Сумма процентов: " FontWeight="Bold" />
+                <TextBlock Text="{Binding Deposit.InterestAccount.Amount}"/>
+            </StackPanel>
+
+            <DataGrid  VerticalAlignment="Top" ItemsSource="{Binding Transactions}" AutoGenerateColumns="False" Margin="10,10,10,0" IsReadOnly="True">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Время" Binding="{Binding DateTime}" />
+                    <DataGridTextColumn Header="Дебет" Binding="{Binding Converter={StaticResource transactionToAccountNameConverter}, ConverterParameter=D}" />
+                    <DataGridTextColumn Header="Кредит" Binding="{Binding Converter={StaticResource transactionToAccountNameConverter}, ConverterParameter=K}" />
+                    <DataGridTextColumn Header="Сумма">
+                        <DataGridTextColumn.Binding>
+                            <MultiBinding StringFormat="{}{0} {1}">
+                                <Binding Path="Sum" />
+                                <Binding  ElementName="window" Path="DataContext.Deposit.CurrencyType" />
+                            </MultiBinding>
+                        </DataGridTextColumn.Binding>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Назначение" Binding="{Binding Description}" />
+                    <DataGridTextColumn Header="Вноситель" Binding="{Binding PayerInfo}" />
+                    <DataGridTextColumn Header="Оператор" Binding="{Binding Operator}" />
+                </DataGrid.Columns>
+            </DataGrid>
+        </StackPanel>
+    </Grid>
+</Window>

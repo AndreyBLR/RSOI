@@ -33,10 +33,14 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Icon.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup />
+  <PropertyGroup>
+    <NoWin32Manifest>true</NoWin32Manifest>
+  </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Prism, Version=6.3.0.0, Culture=neutral, PublicKeyToken=40ee6c3a2184dc59, processorArchitecture=MSIL">
-      <HintPath>..\packages\Prism.Core.6.3.0\lib\net45\Prism.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Data.Linq" />
@@ -58,40 +62,43 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Commands\DelegateCommand.cs" />
     <Compile Include="Converters\BoolToContractStatusConverter.cs" />
     <Compile Include="Converters\BoolToEarlyClosingStatusConverter.cs" />
+    <Compile Include="Converters\DateTimeToDateConverter.cs" />
     <Compile Include="Converters\TransactionToAccountNameConverter.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="ViewModels\BaseViewModel.cs" />
     <Compile Include="ViewModels\DepositViewModel.cs" />
-    <Compile Include="ViewModels\ListOfAccountsViewModel.cs" />
-    <Compile Include="ViewModels\ListOfContractsViewModel.cs" />
+    <Compile Include="ViewModels\ContractsViewModel.cs" />
+    <Compile Include="ViewModels\LoginViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
-    <Compile Include="ViewModels\RegisterNewClientViewModel.cs" />
+    <Compile Include="ViewModels\RegisterClientViewModel.cs" />
     <Compile Include="ViewModels\OpenDepositViewModel.cs" />
-    <Compile Include="ViewModels\TransferMoneyToDepositViewModel.cs" />
-    <Compile Include="Views\DepositView.xaml.cs">
-      <DependentUpon>DepositView.xaml</DependentUpon>
+    <Compile Include="ViewModels\TransferMoneyViewModel.cs" />
+    <Compile Include="ViewModels\WithdrawMoneyViewModel.cs" />
+    <Compile Include="Windows\DepositWindow.xaml.cs">
+      <DependentUpon>DepositWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\ListOfAccounts.xaml.cs">
-      <DependentUpon>ListOfAccounts.xaml</DependentUpon>
+    <Compile Include="Windows\ContractsWindow.xaml.cs">
+      <DependentUpon>ContractsWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\ListOfContracts.xaml.cs">
-      <DependentUpon>ListOfContracts.xaml</DependentUpon>
+    <Compile Include="Windows\LoginWindow.xaml.cs">
+      <DependentUpon>LoginWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\RegisterNewClient.xaml.cs">
-      <DependentUpon>RegisterNewClient.xaml</DependentUpon>
+    <Compile Include="Windows\RegisterClientWindow.xaml.cs">
+      <DependentUpon>RegisterClientWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\OpenDeposit.xaml.cs">
-      <DependentUpon>OpenDeposit.xaml</DependentUpon>
+    <Compile Include="Windows\OpenDepositWindow.xaml.cs">
+      <DependentUpon>OpenDepositWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\TransferMoneyToDeposit.xaml.cs">
-      <DependentUpon>TransferMoneyToDeposit.xaml</DependentUpon>
+    <Compile Include="Windows\TransferMoneyWindow.xaml.cs">
+      <DependentUpon>TransferMoneyWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\WithdrawInterest.xaml.cs">
-      <DependentUpon>WithdrawInterest.xaml</DependentUpon>
+    <Compile Include="Windows\WithdrawMoneyWindow.xaml.cs">
+      <DependentUpon>WithdrawMoneyWindow.xaml</DependentUpon>
     </Compile>
-    <Page Include="MainWindow.xaml">
+    <Page Include="Windows\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -99,35 +106,35 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="MainWindow.xaml.cs">
+    <Compile Include="Windows\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="Views\DepositView.xaml">
+    <Page Include="Windows\DepositWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\ListOfAccounts.xaml">
+    <Page Include="Windows\ContractsWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\ListOfContracts.xaml">
+    <Page Include="Windows\LoginWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\RegisterNewClient.xaml">
+    <Page Include="Windows\RegisterClientWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\OpenDeposit.xaml">
+    <Page Include="Windows\OpenDepositWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\TransferMoneyToDeposit.xaml">
+    <Page Include="Windows\TransferMoneyWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\WithdrawInterest.xaml">
+    <Page Include="Windows\WithdrawMoneyWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -150,7 +157,6 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -167,6 +173,9 @@
   </ItemGroup>
   <ItemGroup>
     <Service Include="{3259AA49-8AA1-44D3-9025-A0B520596A8C}" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icon.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

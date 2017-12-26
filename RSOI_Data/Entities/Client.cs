@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Odbc;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -10,6 +11,8 @@ namespace RSOI_Data.Entities
 {
     public class Client : ActiveRecord
     {
+        #region Properties
+
         public Passport Passport { get; set; }
         public City City { get; set; }
         public string Address { get; set; }
@@ -18,9 +21,11 @@ namespace RSOI_Data.Entities
         public string Email { get; set; }
         public string WorkPlace { get; set; }
         public string WorkPosition { get; set; }
-        public long MonthIncome { get; set; }
+        public string MonthIncome { get; set; }
         public bool Reservist { get; set; }
         public Disability Disability { get; set; }
+
+        #endregion
 
         public Client()
         {
@@ -48,12 +53,12 @@ namespace RSOI_Data.Entities
                         Passport = Passport.GetPassportById((string) reader["PassportId"]),
                         City = City.GetCityById((int) reader["CityId"]),
                         Address = (string) reader["Address"],
-                        HomePhone = (string) reader["HomePhone"],
-                        MobilePhone = (string) reader["MobilePhone"],
-                        Email = (string) reader["Email"],
-                        WorkPlace = (string) reader["WorkPlace"],
-                        WorkPosition = (string) reader["WorkPosition"],
-                        MonthIncome = (long) reader["MonthIncome"],
+                        HomePhone = reader["HomePhone"] != DBNull.Value ? (string)reader["HomePhone"] : "",
+                        MobilePhone = reader["MobilePhone"] != DBNull.Value ? (string)reader["MobilePhone"] : "",
+                        Email = reader["Email"] != DBNull.Value ? (string)reader["Email"] : "",
+                        WorkPlace = reader["WorkPlace"] != DBNull.Value ? (string)reader["WorkPlace"] : "",
+                        WorkPosition = reader["WorkPosition"] != DBNull.Value ? (string)reader["WorkPosition"] : "",
+                        MonthIncome = reader["MonthIncome"] != DBNull.Value ? ((double)reader["MonthIncome"]).ToString(CultureInfo.InvariantCulture) : "",
                         Reservist = (bool) reader["Reservist"],
                         Disability = Disability.GetDisabilityById((int) reader["DisabilityId"])
                     };
@@ -70,8 +75,7 @@ namespace RSOI_Data.Entities
             var clients = new List<Client>();
 
             string queryString = "SELECT * FROM Clients";
-
-
+            
             using (OdbcConnection connection = new OdbcConnection(ConnectionString))
             {
                 OdbcCommand command = new OdbcCommand(queryString, connection);
@@ -82,7 +86,7 @@ namespace RSOI_Data.Entities
 
                 while (reader.Read())
                 {
-                    clients.Add(new Client()
+                    clients.Add(new Client
                     {
                         Passport = Passport.GetPassportById((string) reader["PassportId"]),
                         City = City.GetCityById((int) reader["CityId"]),
@@ -92,7 +96,7 @@ namespace RSOI_Data.Entities
                         Email = (string) reader["Email"],
                         WorkPlace = (string) reader["WorkPlace"],
                         WorkPosition = (string) reader["WorkPosition"],
-                        MonthIncome = (long) reader["MonthIncome"],
+                        MonthIncome = ((double) reader["MonthIncome"]).ToString(CultureInfo.InvariantCulture),
                         Reservist = (bool) reader["Reservist"],
                         Disability = Disability.GetDisabilityById((int) reader["DisabilityId"])
                     });
@@ -101,14 +105,15 @@ namespace RSOI_Data.Entities
                 reader.Close();
             }
 
-
             return clients;
         }
 
-        public bool Insert()
+        public void Insert()
         {
-            if (Passport.Insert())
+            if (string.IsNullOrEmpty(Verify()))
             {
+                Passport.Insert();
+
                 string queryString = "INSERT INTO Clients " + "(" +
                                      "PassportId, " +
                                      "Address, " +
@@ -134,33 +139,7 @@ namespace RSOI_Data.Entities
                                      Disability.Id + "','" +
                                      City.Id + "')";
 
-                if (string.IsNullOrEmpty(Verify()))
-                {
-                    using (OdbcConnection connection = new OdbcConnection(ConnectionString))
-                    {
-                        connection.Open();
 
-                        var command = new OdbcCommand(queryString, connection);
-
-                        command.ExecuteNonQuery();
-                    }
-
-                    return true;
-                }
-
-                return false;
-
-            }
-
-            return false;
-        }
-
-        public bool Delete()
-        {
-            string queryString = "DELETE FROM Passports WHERE IdNumber = '" + Passport.PassportId + "' ";
-
-            try
-            {
                 using (OdbcConnection connection = new OdbcConnection(ConnectionString))
                 {
                     connection.Open();
@@ -169,24 +148,22 @@ namespace RSOI_Data.Entities
 
                     command.ExecuteNonQuery();
                 }
-
-                return true;
             }
-            catch (Exception)
+            else
             {
-                return false;
+                throw new Exception("INSERT Passport is Failed due to verification of entity fields is failed");
             }
-
         }
-
+        
         public string Verify()
         {
             var report = Passport.Verify();
 
-            report = AddToReport(report, VerifyAddress());
-            report = AddToReport(report, VerifyEmail());
             report = AddToReport(report, VerifyMobilePhone());
+            report = AddToReport(report, VerifyEmail());
             report = AddToReport(report, VerifyMonthIncome());
+            report = AddToReport(report, VerifyCity());
+            report = AddToReport(report, VerifyAddress());
 
             return report;
         }
@@ -197,17 +174,7 @@ namespace RSOI_Data.Entities
         }
 
         #region Verification
-
-        private string VerifyAddress()
-        {
-            if (string.IsNullOrEmpty(Address))
-            {
-                return "Пустое поле 'Адрес Проживания'.";
-            }
-
-            return "";
-        }
-
+        
         private string VerifyMobilePhone()
         {
             var regex = new Regex("\\d{9}", RegexOptions.IgnoreCase);
@@ -223,7 +190,7 @@ namespace RSOI_Data.Entities
             }
 
             return
-                "Номер мобильного телефона должен содержать 9 цифр (2 цифры - код оператора, 7 цифр - номер телефона).";
+                "Номер мобильного телефона должен содержать 9 цифр (2 цифры - код оператора, 7 цифр - номер телефона)";
         }
 
         private string VerifyEmail()
@@ -241,19 +208,44 @@ namespace RSOI_Data.Entities
                 return "";
             }
 
-            return "Email должен соответствовать формату name@domain.";
+            return "Email должен соответствовать формату name@domain";
         }
 
         private string VerifyMonthIncome()
         {
-            if (MonthIncome >= 0)
+            if (double.TryParse(MonthIncome, out var result))
             {
-                return "";
+                if (result >= 0)
+                {
+                    return "";
+                }
+
+                return "Значение в поле 'Месячный Доход' не может быть отрицательным";
             }
 
-            return "Месячный доход не может быть отрицательным значением.";
+            return "Проверьте введённое значение в поле 'Месячный Доход'";
         }
 
+        private string VerifyCity()
+        {
+            if (City == null)
+            {
+                return "Пустое поле 'Город Проживания'";
+            }
+
+            return "";
+        }
+
+        private string VerifyAddress()
+        {
+            if (string.IsNullOrEmpty(Address))
+            {
+                return "Пустое поле 'Адрес Проживания'";
+            }
+
+            return "";
+        }
+        
         private string AddToReport(string report, string error)
         {
             if (!string.IsNullOrEmpty(error))

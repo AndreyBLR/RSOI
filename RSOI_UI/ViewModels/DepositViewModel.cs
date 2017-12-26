@@ -10,7 +10,32 @@ namespace RSOI_UI.ViewModels
 {
     public class DepositViewModel : BaseViewModel
     {
-        public Deposit Deposit { get; set; }
+        private Deposit _deposit;
+        private IList<Transaction> _transactions;
+
+        #region Presentation Properties
+
+        public Deposit Deposit
+        {
+            get => _deposit;
+            set
+            {
+                _deposit = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public IList<Transaction> Transactions
+        {
+            get => _transactions;
+            set
+            {
+                _transactions = value;
+                OnPropertyChanged();
+            }
+        }
+
+        #endregion
 
         public DepositViewModel(Deposit deposit)
         {
@@ -19,11 +44,7 @@ namespace RSOI_UI.ViewModels
             var accountOperations = Transaction.GetListOfTransactionsByAccountId(deposit.CurrentAccount.Id).ToList();
             accountOperations.AddRange(Transaction.GetListOfTransactionsByAccountId(deposit.InterestAccount.Id));
 
-            ListOfTransactions = new ObservableCollection<Transaction>(accountOperations.OrderBy(item=>item.DateTime));
+            Transactions = new ObservableCollection<Transaction>(accountOperations.OrderBy(item=>item.Id));
         }
-
-        public IList<Transaction> ListOfTransactions { get; set; }
-
-
     }
 }

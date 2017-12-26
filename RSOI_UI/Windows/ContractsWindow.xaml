@@ -1,12 +1,17 @@
-﻿<Window x:Class="RSOI_UI.Views.ListOfContracts"
+﻿<Window x:Class="RSOI_UI.Windows.ContractsWindow"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:RSOI_UI.Views"
              xmlns:converters="clr-namespace:RSOI_UI.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300" Background="WhiteSmoke" Title="{Binding Title}">
+    <Window.InputBindings>
+        <KeyBinding Command="{Binding TransferMoneyCommand}" Modifiers="Shift" Key="T" />
+        <KeyBinding Command="{Binding WithdrawMoneyCommand}" Modifiers="Shift" Key="W" />
+        <KeyBinding Command="{Binding ShowDepositViewCommand}" Modifiers="Shift" Key="V" />
+        <KeyBinding Command="{Binding CloseContractCommand}" Modifiers="Shift" Key="C" />
+    </Window.InputBindings>
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -18,20 +23,22 @@
         </ResourceDictionary>
     </Window.Resources>
     <Grid>
-        <DataGrid ItemsSource="{Binding ListOfContracts}" SelectedItem="{Binding SelectedContract}" AutoGenerateColumns="False">
+        <DataGrid ItemsSource="{Binding Contracts}" SelectedItem="{Binding SelectedContract}" AutoGenerateColumns="False" IsReadOnly="True" Margin="10">
             <DataGrid.ContextMenu>
                 <ContextMenu >
-                    <MenuItem Header="Зачислить Средства" Command="{Binding TransferMoneyToDepositCommand}" />
-                    <MenuItem Header="Инфо..." Command="{Binding  ShowDepositViewCommand}" />
-                    <MenuItem Header="Закрыть" Command="{Binding  CloseContractCommand}" />
+                    <MenuItem Header="Зачислить Средства.." Command="{Binding TransferMoneyCommand}" InputGestureText="Shift+T" />
+                    <MenuItem Header="Списать Средства.." Command="{Binding WithdrawMoneyCommand}" InputGestureText="Shift+W" />
+                    <MenuItem Header="Выписка.." Command="{Binding  ShowDepositViewCommand}" InputGestureText="Shift+V" />
+                    <MenuItem Header="Закрыть Договор" Command="{Binding  CloseContractCommand}" InputGestureText="Shift+C" />
                 </ContextMenu>
             </DataGrid.ContextMenu>
 
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Номер" Binding="{Binding Number}" />
-                <DataGridTextColumn Header="Тип контракта" Binding="{Binding ContractType}" />
+                <DataGridTextColumn Header="Тип Договора" Binding="{Binding ContractType}" />
                 <DataGridTextColumn Header="Досрочное закрытие" Binding="{Binding Path=EarlyClosing, Converter={StaticResource boolToEarlyClosingStatusConverter}}" />
                 <DataGridTextColumn Header="Статус" Binding="{Binding Path=IsClosed, Converter={StaticResource boolToContractStatusConverter}}" />
+                <DataGridTextColumn Header="Оператор" Binding="{Binding Path=Operator}" />
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

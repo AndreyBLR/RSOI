@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using Prism.Commands;
 using RSOI_UI.Annotations;
 
 namespace RSOI_UI.ViewModels
@@ -18,11 +12,6 @@ namespace RSOI_UI.ViewModels
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        protected void RaiseCanExecuteChanged(DelegateCommand command)
-        {
-            command.RaiseCanExecuteChanged();
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Odbc;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace RSOI_Data.Entities
@@ -17,8 +18,9 @@ namespace RSOI_Data.Entities
         public string Description { get; set; }
         public DateTime DateTime { get; set; }
         public PayerInfo PayerInfo { get; set; }
+        public Credentials Operator { get; set; }
 
-        public bool Insert()
+        public void Insert()
         {
             PayerInfo?.Insert();
 
@@ -28,6 +30,7 @@ namespace RSOI_Data.Entities
                                  "TransactionTypeId, " +
                                  "Sum, " +
                                  "DateTime, " +
+                                 "OperatorId, " +
                                  "Description" +
                                  (PayerInfo == null ? ")" : ", PayerInfoId)") +
                                  "VALUES ('" +
@@ -36,6 +39,7 @@ namespace RSOI_Data.Entities
                                  TransactionType.Id + "','" +
                                  Sum + "','" +
                                  DateTime + "','" +
+                                 Operator.Id + "','" +
                                  Description + "'" +
                                  (PayerInfo == null ? ")" : ", "+PayerInfo.Id + ")");
 
@@ -47,18 +51,16 @@ namespace RSOI_Data.Entities
                 var command = new OdbcCommand(queryString, connection);
 
                 command.ExecuteNonQuery();
+
+                Thread.Sleep(100);
             }
-
-            return true;
-
         }
 
         public static IList<Transaction> GetListOfTransactionsByAccountId(int accountId)
         {
             var transactions = new List<Transaction>();
 
-            string queryString = "SELECT * FROM Transactions WHERE AccountId1 = " + accountId + " OR AccountId2 = " +
-                                 accountId;
+            string queryString = "SELECT * FROM Transactions WHERE AccountId1 = " + accountId + " OR AccountId2 = " + accountId;
 
             using (OdbcConnection connection = new OdbcConnection(ConnectionString))
             {
@@ -80,7 +82,8 @@ namespace RSOI_Data.Entities
                             TransactionType = TransactionType.GetOperationTypeById((int) reader["TransactionTypeId"]),
                             Sum = Math.Round((double) reader["Sum"], 2),
                             Description = (string) reader["Description"],
-                            DateTime = (DateTime) reader["DateTime"]
+                            DateTime = (DateTime) reader["DateTime"],
+                            Operator = Credentials.GetCredentialsById((int)reader["OperatorId"])
                         };
 
                         if (reader["PayerInfoId"] != DBNull.Value)

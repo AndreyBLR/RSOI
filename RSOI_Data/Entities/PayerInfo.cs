@@ -23,8 +23,7 @@ namespace RSOI_Data.Entities
                 OdbcCommand command = new OdbcCommand(queryString, connection);
 
                 connection.Open();
-
-                // Execute the DataReader and access the data.
+                
                 OdbcDataReader reader = command.ExecuteReader();
 
                 while (reader.Read())
@@ -44,7 +43,7 @@ namespace RSOI_Data.Entities
             return null;
         }
 
-        public bool Insert()
+        public void Insert()
         {
             string queryString = "INSERT INTO PayerInfos " + "(" +
                                  "PassportSNumber, " +
@@ -66,11 +65,14 @@ namespace RSOI_Data.Entities
             }
 
             Id = GetLastId();
-            return true;
-
         }
 
-        public int GetLastId()
+        public override string ToString()
+        {
+            return $"{FIO.Trim()} ({PassportSNumber.Trim()})";
+        }
+
+        private int GetLastId()
         {
             string queryString = "SELECT max(Id) FROM PayerInfos";
 
@@ -85,7 +87,7 @@ namespace RSOI_Data.Entities
                 if (reader.HasRows)
                 {
                     reader.Read();
-                    return (int) reader[""];
+                    return (int)reader[""];
 
                 }
 
@@ -94,11 +96,6 @@ namespace RSOI_Data.Entities
 
 
             return -1;
-        }
-
-        public override string ToString()
-        {
-            return $"{FIO.Trim()} ({PassportSNumber.Trim()})";
         }
     }
 }

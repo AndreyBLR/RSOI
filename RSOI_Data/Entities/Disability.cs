@@ -50,8 +50,7 @@ namespace RSOI_Data.Entities
                 OdbcCommand command = new OdbcCommand(queryString, connection);
 
                 connection.Open();
-
-                // Execute the DataReader and access the data.
+                
                 OdbcDataReader reader = command.ExecuteReader();
 
                 while (reader.Read())
@@ -62,8 +61,7 @@ namespace RSOI_Data.Entities
                         Name = (string)reader["Name"]
                     });
                 }
-
-                // Call Close when done reading.
+                
                 reader.Close();
             }
 

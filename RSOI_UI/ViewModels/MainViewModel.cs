@@ -2,38 +2,38 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using Prism.Commands;
+using RSOI_Data;
 using RSOI_Data.Entities;
-using RSOI_UI.Views;
+using RSOI_UI.Commands;
+
+using ContractsWindow = RSOI_UI.Windows.ContractsWindow;
+using OpenDepositWindow = RSOI_UI.Windows.OpenDepositWindow;
+using RegisterClientWindow = RSOI_UI.Windows.RegisterClientWindow;
 
 namespace RSOI_UI.ViewModels
 {
     public class MainViewModel: BaseViewModel
     {
         private string _filter;
-        private MainWindow _view;
+        private Client _selectedClient;
         private IList<Client> _clients;
-        private ObservableCollection<Client> _observabeClients;
+        private IList<Client> _filteredClients;
         
-        public MainViewModel(MainWindow view)
+        public MainViewModel()
         {
-            _view = view;
             _clients = Client.GetListOfClients();
-            
-            ObservableClients = new ObservableCollection<Client>(_clients);
+            FilteredClients = new List<Client>(_clients);
         }
 
         #region Presentation Properties
 
-        public ObservableCollection<Client> ObservableClients
+        public IList<Client> FilteredClients
         {
-            get => _observabeClients;
+            get => _filteredClients;
             set
             {
-                _observabeClients = value;
+                _filteredClients = value;
                 OnPropertyChanged();
             }
         }
@@ -44,20 +44,32 @@ namespace RSOI_UI.ViewModels
             set
             {
                 _filter = value;
+                FilteredClients = new ObservableCollection<Client>(_clients.Where(item => item.Passport.SerialNumber.StartsWith(_filter)));
                 OnPropertyChanged();
-                ObservableClients = new ObservableCollection<Client>(_clients.Where(item => item.Passport.SerialNumber.StartsWith(_filter)));
             }
         }
 
-        public Client SelectedClient { get; set; }
+        public Client SelectedClient
+        {
+            get => _selectedClient;
+            set
+            {
+                _selectedClient = value;
+                OnPropertyChanged();
+            }
+        }
 
         #endregion
         
         #region Commands
 
-        private DelegateCommand _openNewClientWindowCommand;
-        public DelegateCommand OpenNewClientWindowCommand => _openNewClientWindowCommand ??
-                                                      (_openNewClientWindowCommand = new DelegateCommand(OpenNewClientWindowExecute));
+        private DelegateCommand _registerClientCommand;
+        public DelegateCommand RegisterClientCommand => _registerClientCommand ??
+                                                      (_registerClientCommand = new DelegateCommand(RegisterClientExecute));
+
+        private DelegateCommand _closeApplicationCommand;
+        public DelegateCommand CloseApplicationCommand => _closeApplicationCommand ??
+                                                             (_closeApplicationCommand = new DelegateCommand(CloseApplicationExecute));
         
         private DelegateCommand _closeOperationalDayCommand;
         public DelegateCommand CloseOperationalDayCommand => _closeOperationalDayCommand ??
@@ -65,58 +77,77 @@ namespace RSOI_UI.ViewModels
 
         private DelegateCommand _openDepositCommand;
         public DelegateCommand OpenDepositCommand => _openDepositCommand ??
-                                                     (_openDepositCommand = new DelegateCommand(OpenDepositExecute));
+                                                     (_openDepositCommand = new DelegateCommand(OpenDepositExecute, DataGridContextMenuCommandCanExecute));
 
-        private DelegateCommand _openListOfDepositsCommand;
-        public DelegateCommand OpenListOfDepositsCommand => _openListOfDepositsCommand ??
-                                                            (_openListOfDepositsCommand = new DelegateCommand(OpenListOfDepositsExecute));
+        
+        private DelegateCommand _showContractsCommand;
+        public DelegateCommand ShowContractsCommand => _showContractsCommand ??
+                                                            (_showContractsCommand = new DelegateCommand(ShowContractsExecute, DataGridContextMenuCommandCanExecute));
 
         #endregion
 
         #region Command Handlers
 
-        private void OpenNewClientWindowExecute()
+        private void RegisterClientExecute()
         {
-            var newClientWindow = new RegisterNewClient()
-            {
-                DataContext = new RegisterNewClientViewModel()
-            };
-
-            newClientWindow.ShowDialog();
+            var registerClientWindow = new RegisterClientWindow();
+            registerClientWindow.ShowDialog();
         }
         
         private void CloseOperationalDayExecute()
         {
-            var deposits = Deposit.GetListOfDeposits();
-
-            foreach (var deposit in deposits)
+            if (MessageBox.Show("Вы действительно хотите закрыть банковский день?", "Предупреждение", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
             {
-                var income = DepositManager.CalculateDepositIncomeByDailyRate(deposit);
-                DepositManager.Instance.AddToInterestAccounts(deposit, income);
+                try
+                {
+                    var contracts = Contract.GetListOfContracts();
+
+                    foreach (var contract in contracts)
+                    {
+                        var deposit = Deposit.GetById(contract.Number);
+
+                        if (!contract.IsClosed && DateTime.Now.Date < deposit.CloseDate.Date)
+                        {
+                            var income = DepositManager.CalculateDepositIncomeByDailyRate(deposit);
+                            DepositManager.Instance.TransferToInterestAccounts(deposit, income);
+                        }
+                    }
+
+                    MessageBox.Show("Банковский день закрыт", "Оповещение", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Не удалось закрыть банковский день {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
+        }
+
+        private void CloseApplicationExecute()
+        {
+            Application.Current.Shutdown();
         }
 
         private void OpenDepositExecute()
         {
             if (SelectedClient != null)
             {
-                var openDepositWindow = new OpenDeposit();
-                openDepositWindow.DataContext = new OpenDepositViewModel(openDepositWindow, SelectedClient);
+                var openDepositWindow = new OpenDepositWindow(SelectedClient);
                 openDepositWindow.ShowDialog();
             }
         }
 
-        private void OpenListOfDepositsExecute()
+        private void ShowContractsExecute()
         {
             if (SelectedClient != null)
             {
-                var listOfDepositsWindow = new ListOfContracts()
-                {
-                    DataContext = new ListOfContractsViewModel(SelectedClient)
-                };
-
+                var listOfDepositsWindow = new ContractsWindow(SelectedClient);
                 listOfDepositsWindow.ShowDialog();
             }
+        }
+
+        private bool DataGridContextMenuCommandCanExecute()
+        {
+            return SelectedClient?.Passport.PassportId != null;
         }
 
         #endregion

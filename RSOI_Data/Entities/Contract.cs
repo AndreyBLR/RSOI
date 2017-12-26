@@ -14,6 +14,7 @@ namespace RSOI_Data.Entities
         public ContractType ContractType { get; set; }
         public bool IsClosed { get; set; }
         public bool EarlyClosing { get; set; }
+        public Credentials Operator { get; set; }
 
         public static Contract GetContractByNumber(string numberId)
         {
@@ -24,8 +25,7 @@ namespace RSOI_Data.Entities
                 OdbcCommand command = new OdbcCommand(queryString, connection);
 
                 connection.Open();
-
-                // Execute the DataReader and access the data.
+                
                 OdbcDataReader reader = command.ExecuteReader();
 
                 if (reader.HasRows)
@@ -42,12 +42,47 @@ namespace RSOI_Data.Entities
                     };
 
                 }
-
-                // Call Close when done reading.
+                
                 reader.Close();
             }
 
             return null;
+        }
+
+        public static IList<Contract> GetListOfContracts()
+        {
+            var contracts = new List<Contract>();
+
+            string queryString = "SELECT * FROM Contracts";
+
+            using (OdbcConnection connection = new OdbcConnection(ConnectionString))
+            {
+                OdbcCommand command = new OdbcCommand(queryString, connection);
+
+                connection.Open();
+
+                OdbcDataReader reader = command.ExecuteReader();
+
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        contracts.Add(new Contract()
+                        {
+                            Number = (string)reader["Number"],
+                            ContractType = ContractType.GetContractTypeById((int)reader["ContractTypeId"]),
+                            Client = Client.GetClientById((string)reader["ClientId"]),
+                            IsClosed = (bool)reader["IsClosed"],
+                            EarlyClosing = (bool)reader["EarlyClosing"],
+                            Operator = Credentials.GetCredentialsById((int)reader["OperatorId"])
+                        });
+                    }
+                }
+
+                reader.Close();
+            }
+
+            return contracts;
         }
 
         public static IList<Contract> GetListOfContractsByClient(string passportId)
@@ -61,8 +96,7 @@ namespace RSOI_Data.Entities
                 OdbcCommand command = new OdbcCommand(queryString, connection);
 
                 connection.Open();
-
-                // Execute the DataReader and access the data.
+                
                 OdbcDataReader reader = command.ExecuteReader();
 
                 if (reader.HasRows)
@@ -75,51 +109,35 @@ namespace RSOI_Data.Entities
                             ContractType = ContractType.GetContractTypeById((int) reader["ContractTypeId"]),
                             Client = Client.GetClientById((string) reader["ClientId"]),
                             IsClosed = (bool)reader["IsClosed"],
-                            EarlyClosing = (bool)reader["EarlyClosing"]
+                            EarlyClosing = (bool)reader["EarlyClosing"],
+                            Operator = Credentials.GetCredentialsById((int)reader["OperatorId"])
                         });
                     }
                 }
-
-                // Call Close when done reading.
+                
                 reader.Close();
             }
 
             return contracts;
         }
-
-        public bool Insert()
+        
+        public void Insert()
         {
             string queryString = "INSERT INTO Contracts " + "(" +
                                  "Number, " +
                                  "ContractTypeId, " +
                                  "IsClosed, " +
                                  "EarlyClosing, " +
-                                 "ClientId)" +
+                                 "OperatorId, " +
+                                 "ClientId) " +
                                  "VALUES ('" +
                                  Number + "','" +
                                  ContractType.Id + "','" +
                                  IsClosed + "','" +
                                  EarlyClosing + "','" +
+                                 Operator.Id + "','" +
                                  Client.Passport.PassportId + "')";
-
-           
-                using (OdbcConnection connection = new OdbcConnection(ConnectionString))
-                {
-                    connection.Open();
-
-                    var command = new OdbcCommand(queryString, connection);
-
-                    command.ExecuteNonQuery();
-                }
-                return true;
-           
-        }
-
-        public bool Update()
-        {
-            string queryString = "UPDATE Contracts SET IsClosed = '" + IsClosed + "' WHERE Number = '" + Number + "'";
-
-
+            
             using (OdbcConnection connection = new OdbcConnection(ConnectionString))
             {
                 connection.Open();
@@ -128,9 +146,18 @@ namespace RSOI_Data.Entities
 
                 command.ExecuteNonQuery();
             }
+        }
 
-            return true;
-
+        public void Update()
+        {
+            string queryString = "UPDATE Contracts SET IsClosed = '" + IsClosed + "', OperatorId = "+ Operator.Id + " WHERE Number = '" + Number + "'";
+            
+            using (OdbcConnection connection = new OdbcConnection(ConnectionString))
+            {
+                connection.Open();
+                var command = new OdbcCommand(queryString, connection);
+                command.ExecuteNonQuery();
+            }
         }
     }
 }
